@@ -3,7 +3,6 @@ from sqlalchemy import *
 from sqlalchemy.types import Unicode, UnicodeText
 from sqlalchemy.orm import relationship,backref
 from datetime import datetime
-from Sociedad import Sociedad
 import requests
 from itertools import izip
 from bs4 import BeautifulSoup,SoupStrainer
