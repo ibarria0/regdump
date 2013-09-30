@@ -2,6 +2,9 @@ import requests
 import Classes
 from modules import parser,db_worker
 from bs4 import BeautifulSoup,SoupStrainer
+from Queue import Queue
+from Query import Query
+from time import sleep
 
 only_row_tags = SoupStrainer("tr")
 a_table = SoupStrainer("table")
@@ -13,16 +16,26 @@ def query_url(page,query):
 def parse_query_result(html):
   return [Classes.Sociedad(row.td.string, row.find('a').string) for row in BeautifulSoup(html,"html.parser").find_all(a_table)[6].contents[1:]]
 
+def dump_queue(queue):
+    """Empties all pending items in a queue and returns them in a list."""
+    result = []
+    while queue.qsize() > 0:
+        result.append(queue.get())
+        queue.task_done()
+    return result
+
 def collect_query(query):
   page = 1
   results = []
-  while True:
-    html = requests.get(query_url(page,query)).text
-    results.extend(parse_query_result(html))
-    if len(results) < (15 * (page/15)):
-      break
-    else:
-      page = page + 15
+  html_queue = Queue()
+  while (len(results) % 15 == 0 ):
+    queries = [Query(query_url(i,query),html_queue) for i in xrange(page,page+(15*5),15)]
+    for query in queries: 
+      query.setDaemon(True)
+      query.start()
+    while any([query.is_alive() for query in queries]): sleep(1)
+    for html in dump_queue(html_queue): results.extend(parse_query_result(html))
+    page = page + (5*15)
   return db_worker.find_or_create_sociedades(results)
 
 def scrape_sociedad(sociedad):
