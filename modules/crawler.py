@@ -12,7 +12,6 @@ only_row_tags = SoupStrainer("tr")
 a_table = SoupStrainer("table")
 consulta = SoupStrainer(id="CONSULTA")
 logger = logging.getLogger('crawler')
-THREADS = 15
 
 def query_url(page,query):
   return ('https://www.registro-publico.gob.pa/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
@@ -32,6 +31,10 @@ def chunks(l, n):
     """ Yield successive n-sized chunks from l."""
     for i in xrange(0, len(l), n):
         yield filter(lambda x: x is not None,l[i:i+n]) 
+
+def setThreads(n):
+    global THREADS
+    THREADS = n 
 
 def collect_query(query):
   page = 1
