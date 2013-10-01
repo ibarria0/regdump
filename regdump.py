@@ -29,7 +29,6 @@ args = parser.parse_args()
 
 sociedades = crawler.collect_query(args.query)
 logger.info('found %i sociedades', len(sociedades))
-logger.info('initializing data mining')
 socidedades = crawler.scrape_sociedades(sociedades)
 logger.info('found %i personas', len([item for sublist in [sociedad.personas for sociedad in socidedades] for item in sublist]))
 logger.info('regdump finished')

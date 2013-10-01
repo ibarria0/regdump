@@ -4,7 +4,7 @@ formatters:
     format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     datefmt: '%m/%d/%Y %H:%M:%S %p'
   console:
-    format: '%(asctime)s  %(message)s'
+    format: '%(asctime)s - %(message)s'
     datefmt: '%H:%M:%S'
 
 handlers:
@@ -23,4 +23,9 @@ loggers:
     level: INFO 
     handlers: [console,file]
     propagate: no
+  crawler:
+    level: INFO 
+    handlers: [console,file]
+    propagate: no
+
 

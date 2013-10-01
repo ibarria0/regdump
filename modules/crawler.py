@@ -1,4 +1,5 @@
 import requests
+import logging
 import Classes
 from modules import parser,db_worker
 from bs4 import BeautifulSoup,SoupStrainer
@@ -9,6 +10,7 @@ from time import sleep
 only_row_tags = SoupStrainer("tr")
 a_table = SoupStrainer("table")
 consulta = SoupStrainer(id="CONSULTA")
+logger = logging.getLogger('crawler')
 THREADS = 15
 
 def query_url(page,query):
@@ -34,6 +36,7 @@ def collect_query(query):
   page = 1
   results = []
   html_queue = Queue()
+  logger.info('initializing queries with %i threads', THREADS)
   while (len(results) % 15 == 0 ):
     queries = [Query(query_url(i,query),html_queue) for i in xrange(page,page+(15*THREADS),15)]
     for query in queries: 
@@ -51,6 +54,7 @@ def scrape_sociedad(sociedad):
   return sociedad
  
 def scrape_sociedades(sociedades):
+  logger.info('initializing data mining with %i threads', THREADS)
   for chunk in chunks(sociedades, THREADS):
     queries = [SociedadQuery(sociedad) for sociedad in chunk]
     for query in queries: 
