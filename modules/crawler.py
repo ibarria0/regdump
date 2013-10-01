@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup,SoupStrainer
 from Queue import Queue
 from Query import Query,SociedadQuery
 from time import sleep
+from threading import active_count
 
 only_row_tags = SoupStrainer("tr")
 a_table = SoupStrainer("table")
@@ -34,19 +35,23 @@ def chunks(l, n):
 
 def collect_query(query):
   page = 1
-  results = []
   html_queue = Queue()
+  results = []
   logger.info('initializing queries with %i threads', THREADS)
   while (len(results) % 15 == 0 ):
-    queries = [Query(query_url(i,query),html_queue) for i in xrange(page,page+(15*THREADS),15)]
-    for query in queries: 
-      query.setDaemon(True)
-      query.start()
-    while any([query.is_alive() for query in queries]): sleep(1)
-    for html in dump_queue(html_queue): results.extend(parse_query_result(html))
-    results = filter(lambda x: x is not None, results)
-    page = page + (15*THREADS)
+    queries,page = spawn_queries(query,(THREADS - active_count() + 1),page,html_queue) #fill thread pool
+    sleep(1)
+    for html in dump_queue(html_queue): results.extend(parse_query_result(html))  #process pending
+  while any([query.is_alive() for query in queries]): sleep(1)
+  for html in dump_queue(html_queue): results.extend(parse_query_result(html))
   return db_worker.find_or_create_sociedades(results)
+
+def spawn_queries(query,n,start_page,html_queue):
+  queries = [Query(query_url(i,query),html_queue) for i in xrange(start_page,start_page+(15*n),15)]
+  for query in queries: 
+    query.setDaemon(True)
+    query.start()
+  return [queries,start_page + (15*n)]
 
 def scrape_sociedad(sociedad):
   scrape_sociedad_data(sociedad,sociedad.html)
@@ -55,14 +60,24 @@ def scrape_sociedad(sociedad):
  
 def scrape_sociedades(sociedades):
   logger.info('initializing data mining with %i threads', THREADS)
-  for chunk in chunks(sociedades, THREADS):
-    queries = [SociedadQuery(sociedad) for sociedad in chunk]
-    for query in queries: 
-      query.setDaemon(True)
-      query.start()
+  sociedades_stack = list(sociedades) #copy list
+  while sociedades_stack:
+    queries = spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1)) #fill thread pool
     while any([query.is_alive() for query in queries]): sleep(1)
   for sociedad in sociedades: scrape_sociedad(sociedad)
   return sociedades
+ 
+def spawn_sociedad_queries(sociedades,n):
+  queries = []
+  for i in xrange(n):
+    try:
+      query = SociedadQuery(sociedades.pop())
+      query.setDaemon(True)
+      query.start()
+      queries.append(query)
+    except IndexError:
+      break
+  return queries
       
 
 def scrape_sociedad_personas(sociedad,html):
