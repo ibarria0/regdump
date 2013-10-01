@@ -29,12 +29,14 @@ class Sociedad(Base):
 
   def get_ficha_html(self):
     url = 'https://www.registro-publico.gob.pa/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
-    return BeautifulSoup(requests.get(url).text, 'html.parser',parse_only=SoupStrainer('table'))
+    self.html = BeautifulSoup(requests.get(url).text, 'html.parser',parse_only=SoupStrainer('table'))
+    return self.html
 
   def __init__(self,nombre,ficha):
     self.nombre = nombre
     self.ficha = ficha
     self.visited = False
+    self.html = False
     
   def __getitem__(self,key):
     return getattr(self, key)

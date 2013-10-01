@@ -10,3 +10,13 @@ class Query(Thread):
   def run(self):
     self.html_queue.put(requests.get(self.url).text)
     return
+
+class SociedadQuery(Thread):
+  def __init__(self,sociedad):
+    Thread.__init__(self)
+    self.sociedad = sociedad
+
+  def run(self):
+    self.sociedad.get_ficha_html()
+    return
+
