@@ -64,9 +64,10 @@ def scrape_sociedad(sociedad):
 def scrape_sociedades(sociedades):
   logger.info('initializing data mining with %i threads', THREADS)
   sociedades_stack = list(sociedades) #copy list
+  queries = []
   while sociedades_stack:
-    queries = spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1)) #fill thread pool
-    while any([query.is_alive() for query in queries]): sleep(1)
+    queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1))) #fill thread pool
+  while any([query.is_alive() for query in queries]): sleep(1)
   for sociedad in sociedades: scrape_sociedad(sociedad)
   return sociedades
  
