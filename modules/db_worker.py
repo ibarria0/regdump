@@ -17,8 +17,8 @@ def find_or_create_sociedades(sociedades):
       result.append(instance)
     else:
       session.add(sociedad)
-      session.commit()
       result.append(sociedad)
+  session.commit()
   return result
 
 
@@ -30,8 +30,8 @@ def find_or_create_personas(personas):
       result.append(instance)
     else:
       session.add(persona)
-      session.commit()
       result.append(persona)
+  session.commit()
   return result
 
 def find_or_create_asociaciones(personas,sociedad,rol):
@@ -43,6 +43,6 @@ def find_or_create_asociaciones(personas,sociedad,rol):
     else:
       asociacion = Classes.Asociacion(persona.id,sociedad.id,rol.upper())
       session.add(asociacion)
-      session.commit()
       result.append(asociacion)
+  session.commit()
   return result

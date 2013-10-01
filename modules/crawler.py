@@ -7,6 +7,7 @@ from Queue import Queue
 from Query import Query,SociedadQuery
 from time import sleep
 from threading import active_count
+from multiprocessing import Pool
 
 only_row_tags = SoupStrainer("tr")
 a_table = SoupStrainer("table")
@@ -57,9 +58,14 @@ def spawn_queries(query,n,start_page,html_queue):
   return [queries,start_page + (15*n)]
 
 def scrape_sociedad(sociedad):
-  scrape_sociedad_data(sociedad,sociedad.html)
-  scrape_sociedad_personas(sociedad,sociedad.html)
-  return sociedad
+  try:
+    scrape_sociedad_data(sociedad,sociedad.html)
+    scrape_sociedad_personas(sociedad,sociedad.html)
+    sociedad.html = None
+  except:
+    pass
+  finally:
+    return sociedad
  
 def scrape_sociedades(sociedades):
   logger.info('initializing data mining with %i threads', THREADS)
@@ -67,6 +73,8 @@ def scrape_sociedades(sociedades):
   queries = []
   while sociedades_stack:
     queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1))) #fill thread pool
+    for sociedad in sociedades: scrape_sociedad(sociedad)
+    sleep(0.5)
   while any([query.is_alive() for query in queries]): sleep(1)
   for sociedad in sociedades: scrape_sociedad(sociedad)
   return sociedades

@@ -36,7 +36,7 @@ class Sociedad(Base):
     self.nombre = nombre
     self.ficha = ficha
     self.visited = False
-    self.html = False
+    self.html = None
     
   def __getitem__(self,key):
     return getattr(self, key)
