@@ -28,11 +28,6 @@ class Sociedad(Base):
   visited = Column(Boolean)
   personas = relationship("Asociacion")
 
-  def get_ficha_html(self):
-    url = 'https://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
-    self.html = BeautifulSoup(requests.get(url,verify=False).text, 'html.parser',parse_only=SoupStrainer('table'))
-    return self.html
-
   def __init__(self,nombre,ficha):
     self.nombre = nombre
     self.ficha = ficha

@@ -8,6 +8,7 @@ from Query import Query,SociedadQuery
 from time import sleep
 from threading import active_count
 from multiprocessing import Pool
+from urllib3 import HTTPConnectionPool
 
 only_row_tags = SoupStrainer("tr")
 a_table = SoupStrainer("table")
@@ -15,7 +16,7 @@ consulta = SoupStrainer(id="CONSULTA")
 logger = logging.getLogger('crawler')
 
 def query_url(page,query):
-  return ('https://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
+  return ('/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
 
 def parse_query_result(html):
   try:
@@ -43,6 +44,8 @@ def chunks(l, n):
 
 def setThreads(n):
     global THREADS
+    global pool
+    pool = HTTPConnectionPool('201.224.39.199', maxsize=n)
     THREADS = n 
 
 def collect_query(query):
@@ -62,7 +65,7 @@ def collect_query(query):
   return db_worker.find_or_create_sociedades(results)
 
 def spawn_queries(query,n,start_page,html_queue):
-  queries = [Query(query_url(i,query),html_queue) for i in xrange(start_page,start_page+(15*n),15)]
+  queries = [Query(query_url(i,query),html_queue,pool) for i in xrange(start_page,start_page+(15*n),15)]
   for query in queries: 
     query.setDaemon(True)
     query.start()
@@ -97,7 +100,7 @@ def spawn_sociedad_queries(sociedades,n,sociedades_queue):
   queries = []
   for i in xrange(n):
     try:
-      query = SociedadQuery(sociedades.pop(),sociedades_queue)
+      query = SociedadQuery(sociedades.pop(),sociedades_queue,pool)
       query.setDaemon(True)
       query.start()
       queries.append(query)
