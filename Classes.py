@@ -1,4 +1,5 @@
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import deferred
 from sqlalchemy import *
 from sqlalchemy.types import Unicode, UnicodeText
 from sqlalchemy.orm import relationship,backref
@@ -15,21 +16,21 @@ class Sociedad(Base):
   id = Column(Integer, Sequence('sociedad_id_seq'), primary_key=True)
   nombre= Column(Unicode(50))
   ficha = Column(Integer(15))
-  capital = Column(Float(15))
-  moneda = Column(Unicode(50))
-  notaria = Column(Unicode(50))
-  fecha_registro = Column(Date)
-  capital_text = Column(UnicodeText)
-  representante_text = Column(UnicodeText)
-  status = Column(Unicode(15))
-  duracion = Column(Unicode(15))
-  provincia = Column(Unicode(25))
+  capital = deferred(Column(Float(15)))
+  moneda = deferred(Column(Unicode(50)))
+  notaria = deferred(Column(Unicode(50)))
+  fecha_registro = deferred(Column(Date))
+  capital_text = deferred(Column(UnicodeText))
+  representante_text = deferred(Column(UnicodeText))
+  status = deferred(Column(Unicode(15)))
+  duracion = deferred(Column(Unicode(15)))
+  provincia = deferred(Column(Unicode(25)))
   visited = Column(Boolean)
   personas = relationship("Asociacion")
 
   def get_ficha_html(self):
-    url = 'https://www.registro-publico.gob.pa/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
-    self.html = BeautifulSoup(requests.get(url).text, 'html.parser',parse_only=SoupStrainer('table'))
+    url = 'https://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
+    self.html = BeautifulSoup(requests.get(url,verify=False).text, 'html.parser',parse_only=SoupStrainer('table'))
     return self.html
 
   def __init__(self,nombre,ficha):

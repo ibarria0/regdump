@@ -15,7 +15,7 @@ consulta = SoupStrainer(id="CONSULTA")
 logger = logging.getLogger('crawler')
 
 def query_url(page,query):
-  return ('https://www.registro-publico.gob.pa/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
+  return ('https://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
 
 def parse_query_result(html):
   try:
@@ -53,7 +53,7 @@ def collect_query(query):
   while (len(results) % 15 == 0 ):
     queries,page = spawn_queries(query,(THREADS - active_count() + 1),page,html_queue) #fill thread pool
     for html in dump_queue(html_queue): results.extend(parse_query_result(html))  #process pending
-    sleep(0.3)
+    sleep(0.1)
     if not all(results): break #there is a false in results so this is done
   while any([query.is_alive() for query in queries]): sleep(1) #wait for pending threads
   for html in dump_queue(html_queue): results.extend(parse_query_result(html)) #process pending
@@ -80,16 +80,15 @@ def scrape_sociedad(sociedad):
  
 def scrape_sociedades(sociedades):
   logger.info('initializing data mining with %i threads', THREADS)
-  sociedades_stack = list(sociedades) #copy list
+  sociedades_stack = list(filter(lambda x: not x.visited,sociedades)) #copy list
   sociedades_queue = Queue()
   queries = []
   while sociedades_stack:
     queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1),sociedades_queue)) #fill thread pool
-    if (len(sociedades_stack) % 3 == 0): process_sociedades_queue(sociedades_queue) #process pending
-    sleep(0.3)
+    sleep(0.1)
   while any([query.is_alive() for query in queries]): sleep(1)
   process_sociedades_queue(sociedades_queue)
-  return sociedades
+  return db_worker.mark_sociedades_visited(sociedades)
 
 def process_sociedades_queue(sociedades_queue):
   for sociedad in dump_queue(sociedades_queue): scrape_sociedad(sociedad)
@@ -112,10 +111,9 @@ def scrape_sociedad_personas(sociedad,html):
     directores = scrape_sociedad_directores(sociedad,html)
     subscriptores = scrape_sociedad_subscriptores(sociedad,html)
     dignatarios = scrape_sociedad_dignatarios(sociedad,html)
-    agente = scrape_sociedad_agente(sociedad,html)
   except:
     return set()
-  return set(directores + subscriptores + dignatarios + agente) 
+  return set(directores + subscriptores + dignatarios) 
 
 def scrape_sociedad_directores(sociedad,html):
   directores = [Classes.Persona(persona) for persona in parser.collect_directores(html)]
@@ -145,6 +143,7 @@ def scrape_sociedad_data(sociedad,html):
     sociedad.notaria = parser.collect_notaria(html)
     sociedad.duracion = parser.collect_duracion(html)
     sociedad.stats = parser.collect_status(html)
+    sociedad.agente = parser.collect_agente(html)
     sociedad.moneda = parser.collect_moneda(html)
     sociedad.capital = parser.collect_capital(html)
     sociedad.capital_text = parser.collect_capital_text(html)

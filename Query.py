@@ -8,7 +8,7 @@ class Query(Thread):
     self.html_queue = html_queue
 
   def run(self):
-    self.html_queue.put(requests.get(self.url).text)
+    self.html_queue.put(requests.get(self.url, verify=False).text)
     return
 
 class SociedadQuery(Thread):

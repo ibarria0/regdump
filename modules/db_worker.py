@@ -21,6 +21,10 @@ def find_or_create_sociedades(sociedades):
   session.commit()
   return result
 
+def mark_sociedades_visited(sociedades):
+  session.query(Classes.Sociedad).filter(Classes.Sociedad.id.in_([sociedad.id for sociedad in sociedades])).update({'visited':True},synchronize_session='fetch')
+  session.commit()
+  return sociedades
 
 def find_or_create_personas(personas):
   result = []
