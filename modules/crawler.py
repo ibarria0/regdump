@@ -18,7 +18,15 @@ def query_url(page,query):
   return ('https://www.registro-publico.gob.pa/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
 
 def parse_query_result(html):
-  return [Classes.Sociedad(row.td.string, row.find('a').string) for row in BeautifulSoup(html,"html.parser").find_all(a_table)[6].contents[1:]]
+  try:
+    sociedades = BeautifulSoup(html,"html.parser", parse_only=a_table).find('th',text='NOMBRE SOCIEDAD').parent.next_siblings
+    sociedad_objects = [Classes.Sociedad(unicode(row.td.string), int(row.find('a').string)) for row in sociedades if row.td.string is not None]
+  except AttributeError:
+    logger.info('failed to retrieve sociedades')
+  if len(sociedad_objects) > 0:
+    return sociedad_objects
+  else:
+    return [False]
 
 def dump_queue(queue):
     """Empties all pending items in a queue and returns them in a list."""
@@ -44,10 +52,13 @@ def collect_query(query):
   logger.info('initializing queries with %i threads', THREADS)
   while (len(results) % 15 == 0 ):
     queries,page = spawn_queries(query,(THREADS - active_count() + 1),page,html_queue) #fill thread pool
-    sleep(1)
     for html in dump_queue(html_queue): results.extend(parse_query_result(html))  #process pending
-  while any([query.is_alive() for query in queries]): sleep(1)
-  for html in dump_queue(html_queue): results.extend(parse_query_result(html))
+    sleep(0.3)
+    if not all(results): break #there is a false in results so this is done
+  while any([query.is_alive() for query in queries]): sleep(1) #wait for pending threads
+  for html in dump_queue(html_queue): results.extend(parse_query_result(html)) #process pending
+  results = filter(lambda x: x is not False,results)
+  results = filter(lambda x: int(x.ficha) > 0, results)
   return db_worker.find_or_create_sociedades(results)
 
 def spawn_queries(query,n,start_page,html_queue):
@@ -61,29 +72,33 @@ def scrape_sociedad(sociedad):
   try:
     scrape_sociedad_data(sociedad,sociedad.html)
     scrape_sociedad_personas(sociedad,sociedad.html)
-    sociedad.html = None
   except:
     pass
   finally:
-    return sociedad
+    sociedad.html = None
+    return True
  
 def scrape_sociedades(sociedades):
   logger.info('initializing data mining with %i threads', THREADS)
   sociedades_stack = list(sociedades) #copy list
+  sociedades_queue = Queue()
   queries = []
   while sociedades_stack:
-    queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1))) #fill thread pool
-    for sociedad in sociedades: scrape_sociedad(sociedad)
-    sleep(0.5)
+    queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1),sociedades_queue)) #fill thread pool
+    if (len(sociedades_stack) % 3 == 0): process_sociedades_queue(sociedades_queue) #process pending
+    sleep(0.3)
   while any([query.is_alive() for query in queries]): sleep(1)
-  for sociedad in sociedades: scrape_sociedad(sociedad)
+  process_sociedades_queue(sociedades_queue)
   return sociedades
- 
-def spawn_sociedad_queries(sociedades,n):
+
+def process_sociedades_queue(sociedades_queue):
+  for sociedad in dump_queue(sociedades_queue): scrape_sociedad(sociedad)
+
+def spawn_sociedad_queries(sociedades,n,sociedades_queue):
   queries = []
   for i in xrange(n):
     try:
-      query = SociedadQuery(sociedades.pop())
+      query = SociedadQuery(sociedades.pop(),sociedades_queue)
       query.setDaemon(True)
       query.start()
       queries.append(query)

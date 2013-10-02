@@ -43,4 +43,3 @@ def collect_duracion(soup):
 
 def collect_agente(soup):
   return unicode(soup.find('td',text='Agente Residente:').find_next_sibling('td').string)
-

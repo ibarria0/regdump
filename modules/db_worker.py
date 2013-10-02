@@ -41,7 +41,7 @@ def find_or_create_asociaciones(personas,sociedad,rol):
     if instance: 
       result.append(instance)
     else:
-      asociacion = Classes.Asociacion(persona.id,sociedad.id,rol.upper())
+      asociacion = Classes.Asociacion(persona.id,sociedad.id,unicode(rol.upper()))
       session.add(asociacion)
       result.append(asociacion)
   session.commit()

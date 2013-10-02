@@ -12,11 +12,13 @@ class Query(Thread):
     return
 
 class SociedadQuery(Thread):
-  def __init__(self,sociedad):
+  def __init__(self,sociedad,sociedades_queue):
     Thread.__init__(self)
     self.sociedad = sociedad
+    self.sociedades_queue = sociedades_queue
 
   def run(self):
     self.sociedad.get_ficha_html()
+    self.sociedades_queue.put(self.sociedad)
     return
 

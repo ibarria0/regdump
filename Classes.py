@@ -42,7 +42,11 @@ class Sociedad(Base):
     return getattr(self, key)
 
   def __str__(self):
+    return "Sociedad(%s)" % (self.nombre)
+
+  def __repr__(self):
     return "Sociedad(%s)" % (self.ficha)
+
 
     
 class Asociacion(Base):
