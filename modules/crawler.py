@@ -88,6 +88,7 @@ def scrape_sociedades(sociedades):
   queries = []
   while sociedades_stack:
     queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1),sociedades_queue)) #fill thread pool
+    if(len(sociedades_stack) % 5): process_sociedades_queue(sociedades_queue)
     sleep(0.1)
   while any([query.is_alive() for query in queries]): sleep(1)
   process_sociedades_queue(sociedades_queue)
