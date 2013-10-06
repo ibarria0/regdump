@@ -29,13 +29,16 @@ class Sociedad(Base):
   personas = relationship("Asociacion")
 
   def __init__(self,nombre,ficha):
-    self.nombre = nombre
+    self.nombre = unicode(nombre)
     self.ficha = ficha
     self.visited = False
     self.html = None
     
   def __getitem__(self,key):
     return getattr(self, key)
+
+  def __hash__(self):
+    return hash(self.ficha)
 
   def __str__(self):
     return "Sociedad(%s)" % (self.nombre)

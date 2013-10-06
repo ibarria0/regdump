@@ -14,6 +14,8 @@ def find_or_create_sociedades(sociedades):
   for sociedad in sociedades:
     instance = session.query(Classes.Sociedad).filter(Classes.Sociedad.ficha==sociedad.ficha).first()
     if instance: 
+      sociedad.id = instance.id
+      session.merge(sociedad)
       result.append(instance)
     else:
       session.add(sociedad)

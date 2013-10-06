@@ -1,5 +1,4 @@
 from threading import Thread
-from bs4 import BeautifulSoup,SoupStrainer
 
 class Query(Thread):
   def __init__(self,url,html_queue,pool):
@@ -28,6 +27,6 @@ class SociedadQuery(Thread):
   def get_ficha_html(self):
     url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.sociedad.ficha)
     response = self.pool.request('GET', url)
-    self.sociedad.html = BeautifulSoup(response.data, 'html.parser',parse_only=SoupStrainer('table'))
+    self.sociedad.html = response.data.decode('latin-1', 'ignore')
     return True
 

@@ -73,6 +73,7 @@ def spawn_queries(query,n,start_page,html_queue):
 
 def scrape_sociedad(sociedad):
   try:
+    sociedad.html = BeautifulSoup(sociedad.html, 'html.parser', parse_only=SoupStrainer('table'))
     scrape_sociedad_data(sociedad,sociedad.html)
     scrape_sociedad_personas(sociedad,sociedad.html)
   except:
@@ -83,16 +84,19 @@ def scrape_sociedad(sociedad):
  
 def scrape_sociedades(sociedades):
   logger.info('initializing data mining with %i threads', THREADS)
-  sociedades_stack = list(filter(lambda x: not x.visited,sociedades)) #copy list
+  sociedades_stack = iter(sociedades) #copy list
   sociedades_queue = Queue()
   queries = []
-  while sociedades_stack:
-    queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1),sociedades_queue)) #fill thread pool
-    if(len(sociedades_stack) % 5): process_sociedades_queue(sociedades_queue)
-    sleep(0.1)
+  while True:   
+    try:
+      queries.extend(spawn_sociedad_queries(sociedades_stack,(THREADS - active_count() + 1),sociedades_queue)) #fill thread pool
+      if(len(queries) % 5): process_sociedades_queue(sociedades_queue)
+      sleep(0.1)
+    except StopIteration:
+      break
   while any([query.is_alive() for query in queries]): sleep(1)
   process_sociedades_queue(sociedades_queue)
-  return db_worker.mark_sociedades_visited(sociedades)
+  return sociedades
 
 def process_sociedades_queue(sociedades_queue):
   for sociedad in dump_queue(sociedades_queue): scrape_sociedad(sociedad)
@@ -101,7 +105,7 @@ def spawn_sociedad_queries(sociedades,n,sociedades_queue):
   queries = []
   for i in xrange(n):
     try:
-      query = SociedadQuery(sociedades.pop(),sociedades_queue,pool)
+      query = SociedadQuery(sociedades.next(),sociedades_queue,pool)
       query.setDaemon(True)
       query.start()
       queries.append(query)
