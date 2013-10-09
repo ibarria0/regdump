@@ -18,6 +18,7 @@ class Sociedad(Base):
   ficha = Column(Integer(15))
   capital = deferred(Column(Float(15)))
   moneda = deferred(Column(Unicode(50)))
+  agente = deferred(Column(Unicode(100)))
   notaria = deferred(Column(Unicode(50)))
   fecha_registro = deferred(Column(Date))
   capital_text = deferred(Column(UnicodeText))
