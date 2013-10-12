@@ -23,6 +23,9 @@ def find_or_create_sociedades(sociedades):
   session.commit()
   return result
 
+def find_by_fichas(fichas):
+    return session.query(Classes.Sociedad).filter(Classes.Sociedad.ficha.in_(fichas)).all()
+
 def get_fichas():
     try:
         return set(zip(*session.query(Classes.Sociedad.ficha).all())[0])
