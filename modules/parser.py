@@ -22,6 +22,12 @@ def collect_subscriptores(soup):
 def collect_moneda(soup):
   return unicode(soup.find('td',text='Moneda: ').find_next_sibling('td').string)
 
+def collect_ficha(soup):
+  return unicode(soup.find(text=re.compile("de Ficha")).parent.parent.parent.find_next_sibling().p.string)
+
+def collect_nombre(soup):
+  return unicode(soup.find(text="Nombre de la Sociedad:").parent.parent.parent.parent.find_next('td').string)
+
 def collect_capital(soup):
   return float(re.sub(r'[^\d.]', '',soup.find('td',text='Monto de Capital:').find_next_sibling('td').string))
 

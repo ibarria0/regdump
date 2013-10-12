@@ -23,6 +23,12 @@ def find_or_create_sociedades(sociedades):
   session.commit()
   return result
 
+def get_fichas():
+    try:
+        return set(zip(*session.query(Classes.Sociedad.ficha).all())[0])
+    except:
+        return set()
+
 def mark_sociedades_visited(sociedades):
   session.query(Classes.Sociedad).filter(Classes.Sociedad.id.in_([sociedad.id for sociedad in sociedades])).update({'visited':True},synchronize_session='fetch')
   session.commit()
