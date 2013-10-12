@@ -14,11 +14,11 @@ class Sociedad(Base):
   __tablename__ = 'sociedades'
   
   id = Column(Integer, Sequence('sociedad_id_seq'), primary_key=True)
-  nombre= Column(Unicode(50))
+  nombre= Column(Unicode(200))
   ficha = Column(Integer(15))
   capital = deferred(Column(Float(15)))
   moneda = deferred(Column(Unicode(50)))
-  agente = deferred(Column(Unicode(100)))
+  agente = deferred(Column(Unicode(200)))
   notaria = deferred(Column(Unicode(50)))
   fecha_registro = deferred(Column(Date))
   capital_text = deferred(Column(UnicodeText))
