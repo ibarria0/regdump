@@ -1,6 +1,6 @@
 from threading import Thread
 from modules import db_worker,parser
-from Classes import Sociedad
+from Classes import Sociedad,Persona,Asociacion
 from time import sleep
 from bs4 import BeautifulSoup,SoupStrainer
 
@@ -22,44 +22,37 @@ def parse_sociedad_html(html):
 def resolve_sociedad(sociedad,asociaciones):
     sociedad = db_worker.find_or_create_sociedades([sociedad])[0]
     for rol,personas in asociaciones.iteritems():
-        if not isinstance(personas, tuple):
-            for persona in personas:
-                db_worker.find_or_create_asociaciones(persona,sociedad,rol) #create associations
-        else:
-            for persona_tuple in personas:
-                db_worker.find_or_create_asociaciones(persona_tuple[1],sociedad,persona_tuple[0]) #create associations
+        db_worker.find_or_create_asociaciones(personas,sociedad,rol) #create associations
     return sociedad
 
 def scrape_sociedad_personas(sociedad,html):
-  try:
     directores = scrape_sociedad_directores(sociedad,html)
     subscriptores = scrape_sociedad_subscriptores(sociedad,html)
     dignatarios = scrape_sociedad_dignatarios(sociedad,html)
-  except:
-    return {}
-  return {'directores':directores, 'subscriptores':subscriptores, 'dignatarios':dignatarios}
+    return dict({'directores':directores, 'subscriptores':subscriptores}.items() +  {tupl[0]:[tupl[1]] for tupl in dignatarios}.items())
 
 def scrape_sociedad_directores(sociedad,html):
-  directores = [Classes.Persona(persona) for persona in parser.collect_directores(html)]
-  #directores = db_worker.find_or_create_asociaciones(directores,sociedad,'director') #create associations
-  return directores
-
-def scrape_sociedad_agente(sociedad,html):
-  agente = Classes.Persona(parser.collect_agente(html))
-  #agente = db_worker.find_or_create_asociaciones([agente],sociedad,'agente') #create associations
-  return agente
+    try:
+        directores = [Persona(persona) for persona in parser.collect_directores(html)]
+    except Exception as e:
+        print e
+        return []
+    return directores
 
 def scrape_sociedad_subscriptores(sociedad,html):
-  subscriptores = [Classes.Persona(persona) for persona in parser.collect_subscriptores(html)]
-  #subscriptores = db_worker.find_or_create_asociaciones(subscriptores,sociedad,'subscriptor')
-  return subscriptores
+    try:
+        subscriptores = [Persona(persona) for persona in parser.collect_subscriptores(html)]
+    except Exception as e:
+        print e
+        return []
+    return subscriptores
 
 def scrape_sociedad_dignatarios(sociedad,html):
-  dignatarios = parser.collect_dignatarios(html)
-  for pair in dignatarios: pair[1] = Classes.Personas(pair[1])
-  #for dignatario in parser.collect_dignatarios(html):
-  #  dignatarios.extend(db_worker.find_or_create_asociaciones(dignatario[1],sociedad,dignatario[0]))
-  #return dignatarios
+  try:
+      dignatarios = parser.collect_dignatarios(html)
+      dignatarios = [(pair[0],Persona(pair[1])) for pair in dignatarios]
+  except Exception as e:
+    return []
   return dignatarios
 
 def scrape_sociedad_data(sociedad,html):
@@ -74,7 +67,8 @@ def scrape_sociedad_data(sociedad,html):
     sociedad.capital = parser.collect_capital(html)
     sociedad.capital_text = parser.collect_capital_text(html)
     sociedad.representante_text = parser.collect_representante_text(html)
-  except:
+  except Exception as e:
+    print e
     return sociedad
   return sociedad
 
