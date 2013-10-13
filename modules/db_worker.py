@@ -9,19 +9,17 @@ session_maker = sessionmaker(bind=engine)
 session = session_maker()
 Classes.Base.metadata.create_all(engine)
 
+def rollback():
+    session.rollback()
+
 def find_or_create_sociedades(sociedades):
-  result = []
-  for sociedad in sociedades:
-    instance = session.query(Classes.Sociedad).filter(Classes.Sociedad.ficha==sociedad.ficha).first()
-    if instance: 
-      sociedad.id = instance.id
-      session.merge(sociedad)
-      result.append(instance)
+    if len(sociedades) > 0:
+        query = session.query(Classes.Sociedad).filter(Classes.Sociedad.ficha.in_([sociedad.ficha for sociedad in sociedades]))
+        result = query.merge_result(sociedades)
+        session.commit()
+        return list(result)
     else:
-      session.add(sociedad)
-      result.append(sociedad)
-  session.commit()
-  return result
+        return []
 
 def find_by_fichas(fichas):
     return session.query(Classes.Sociedad).filter(Classes.Sociedad.ficha.in_(fichas)).all()
@@ -38,26 +36,22 @@ def mark_sociedades_visited(sociedades):
   return sociedades
 
 def find_or_create_personas(personas):
-  result = []
-  for persona in personas:
-    instance = session.query(Classes.Persona).filter(Classes.Persona.nombre==persona.nombre).first()
-    if instance: 
-      result.append(instance)
+    if len(personas) > 0:
+        nombres = [persona.nombre for persona in personas]
+        query = session.query(Classes.Persona).filter(Classes.Persona.nombre.in_(nombres))
+        result = query.merge_result(personas)
+        session.commit()
+        return list(result)
     else:
-      session.add(persona)
-      result.append(persona)
-  session.commit()
-  return result
+        return []
 
 def find_or_create_asociaciones(personas,sociedad,rol):
-  result = []
-  for persona in find_or_create_personas(personas):
-    instance = session.query(Classes.Asociacion).filter(Classes.Asociacion.persona_id==persona.id).filter(Classes.Asociacion.sociedad_id==sociedad.id).filter(Classes.Asociacion.rol==rol.upper()).first()
-    if instance: 
-      result.append(instance)
+    if len(personas) > 0:
+        persona_ids = [persona.id for persona in personas]
+        query = session.query(Classes.Asociacion).filter(Classes.Asociacion.persona_id.in_(persona_ids)).filter(Classes.Asociacion.sociedad_id==sociedad.id).filter(Classes.Asociacion.rol==rol.upper())
+        asociaciones = [Classes.Asociacion(persona.id,sociedad.id,unicode(rol.upper())) for persona in personas]
+        result = query.merge_result(asociaciones)
+        session.commit()
+        return list(result)
     else:
-      asociacion = Classes.Asociacion(persona.id,sociedad.id,unicode(rol.upper()))
-      session.add(asociacion)
-      result.append(asociacion)
-  session.commit()
-  return result
+        return []

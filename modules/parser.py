@@ -3,7 +3,7 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 def collect_dignatarios(soup):
-  cells = [unicode(cell.string) for cell in soup.find('td',text='Nombre del Dignatario').parent.parent.find_next_sibling('table').find_all('td') if cell.string != None]
+  cells = [unicode(cell.string) for cell in soup.find(text='Nombre del Dignatario').find_parent('table').find_next_sibling('table').find_all('td') if cell.string != None]
   return zip(cells[0::2],cells[1::2])
 
 def collect_representante_text(soup):

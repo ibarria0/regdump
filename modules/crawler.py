@@ -35,7 +35,7 @@ def spawn_html_processing_thread(html_queue):
     thread.start()
     return thread
 
-def brute_sociedades(iterator=xrange(0,10000000,2),skip_old=True):
+def brute_sociedades(iterator=xrange(10000000),skip_old=True):
     if skip_old:
         old_fichas = db_worker.get_fichas()
         fichas = [ficha for ficha in iterator if ficha not in old_fichas]

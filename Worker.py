@@ -3,6 +3,7 @@ from modules import db_worker,parser
 from Classes import Sociedad,Persona,Asociacion
 from time import sleep
 from bs4 import BeautifulSoup,SoupStrainer
+from Queue import Empty
 
 def dump_queue(queue):
     """Empties all pending items in a queue and returns them in a list."""
@@ -13,16 +14,22 @@ def dump_queue(queue):
     return result
 
 def parse_sociedad_html(html):
-    soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('table'))
+    soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
     sociedad = Sociedad(parser.collect_nombre(soup),parser.collect_ficha(soup))
     scrape_sociedad_data(sociedad,soup)
     asociaciones = scrape_sociedad_personas(sociedad,soup)
     return resolve_sociedad(sociedad,asociaciones)
 
 def resolve_sociedad(sociedad,asociaciones):
+    real_personas = set()
     sociedad = db_worker.find_or_create_sociedades([sociedad])[0]
     for rol,personas in asociaciones.iteritems():
-        db_worker.find_or_create_asociaciones(personas,sociedad,rol) #create associations
+        new_personas = [persona for persona in personas if persona not in real_personas]
+        new_personas = set(db_worker.find_or_create_personas(new_personas))
+        real_personas.update(new_personas)
+        resolved_personas = [persona for persona in real_personas if persona in personas]
+        db_worker.find_or_create_asociaciones(resolved_personas,sociedad,rol) #create associations
+    print sociedad.nombre,len(sociedad.personas)
     return sociedad
 
 def scrape_sociedad_personas(sociedad,html):
@@ -77,14 +84,14 @@ class ProcessHTML(Thread):
     started = False
     while True:
         try:
-            html = self.html_queue.get(timeout=2)
+            html = self.html_queue.get(timeout=10)
             parse_sociedad_html(html)
             self.html_queue.task_done()
             started = True
-        except Exception as e:
+        except Empty:
             if started == True:
                 return
-            else:
+        except Exception as e:
+                print e
                 sleep(0.5)
-                continue
 
