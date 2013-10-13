@@ -3,7 +3,7 @@ from sqlalchemy.orm import sessionmaker
 import Classes
 import os
 
-db_url = 'postgresql+psycopg2://' + os.environ['PANAUSER'] + ':' + os.environ['PANAPASS'] + '@localhost/panadata'
+db_url = os.environ['panadata_db']
 engine = create_engine(db_url,  encoding='latin-1',echo=False)
 session_maker = sessionmaker(bind=engine)
 session = session_maker()
