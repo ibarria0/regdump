@@ -56,7 +56,6 @@ def scrape_sociedad_dignatarios(sociedad,html):
   return dignatarios
 
 def scrape_sociedad_data(sociedad,html):
-  try:
     sociedad.fecha_registro = parser.collect_fecha_registro(html)
     sociedad.provincia = parser.collect_provincia(html)
     sociedad.notaria = parser.collect_notaria(html)
@@ -67,10 +66,7 @@ def scrape_sociedad_data(sociedad,html):
     sociedad.capital = parser.collect_capital(html)
     sociedad.capital_text = parser.collect_capital_text(html)
     sociedad.representante_text = parser.collect_representante_text(html)
-  except Exception as e:
-    print e
     return sociedad
-  return sociedad
 
 class ProcessHTML(Thread):
   def __init__(self,html_queue):
