@@ -34,7 +34,7 @@ if __name__ == "__main__":
         logger.info('performing query: %s', str(args.query))
         sociedades = crawler.query(args.query)
     else:
-        sociedades = crawler.brute_sociedades()
+        sociedades = crawler.brute_sociedades(skip_old=False)
 
     logger.info('found %i sociedades', len(sociedades))
     logger.info('found %i personas', len([item for sublist in [sociedad.personas for sociedad in sociedades] for item in sublist]))
