@@ -5,14 +5,6 @@ from time import sleep
 from bs4 import BeautifulSoup,SoupStrainer
 from Queue import Empty
 
-def dump_queue(queue):
-    """Empties all pending items in a queue and returns them in a list."""
-    result = []
-    while queue.qsize() > 0:
-        result.append(queue.get())
-        queue.task_done()
-    return result
-
 def parse_sociedad_html(html):
     soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
     sociedad = Sociedad(parser.collect_nombre(soup),parser.collect_ficha(soup))
@@ -93,5 +85,5 @@ class ProcessHTML(Thread):
                 return
         except Exception as e:
                 print e
-                sleep(0.5)
+                sleep(0.1)
 
