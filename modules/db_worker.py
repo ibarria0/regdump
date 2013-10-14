@@ -48,7 +48,7 @@ def find_or_create_personas(personas):
 def find_or_create_asociaciones(personas,sociedad,rol):
     if len(personas) > 0:
         persona_ids = [persona.id for persona in personas]
-        query = session.query(Classes.Asociacion).filter(Classes.Asociacion.persona_id.in_(persona_ids)).filter(Classes.Asociacion.sociedad_id==sociedad.id).filter(Classes.Asociacion.rol==rol.upper())
+        query = session.query(Classes.Asociacion).filter(Classes.Asociacion.sociedad_id==sociedad.id)
         asociaciones = [Classes.Asociacion(persona.id,sociedad.id,unicode(rol.upper())) for persona in personas]
         result = query.merge_result(asociaciones)
         session.commit()
