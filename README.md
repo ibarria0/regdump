@@ -1,7 +1,9 @@
 regdump.py
 ===========
 
-        python regdump.py comida
+Usage
+========
+        python regdump.py
 
 Legal Stuff
 ============
