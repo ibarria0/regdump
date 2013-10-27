@@ -27,7 +27,7 @@ class SociedadQuery(Thread):
   def get_ficha_html(self):
     url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.sociedad.ficha)
     response = self.pool.request('GET', url)
-    self.sociedad.html = response.data.decode('latin-1', 'ignore')
+    self.sociedad.html = response.data
     return True
 
 class FichaQuery(Thread):
@@ -43,6 +43,6 @@ class FichaQuery(Thread):
     return
 
   def get_ficha_html(self):
-    url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
+    url = 'http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
     response = self.pool.request('GET', url)
     return response.data

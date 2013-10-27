@@ -3,12 +3,12 @@ import logging
 import Classes
 from modules import parser,db_worker
 from bs4 import BeautifulSoup,SoupStrainer
-from Queue import Queue
+from queue import Queue
 from Query import Query,SociedadQuery,FichaQuery
 from Worker import ProcessHTML
 from time import sleep
 from threading import active_count
-from urllib3 import HTTPConnectionPool
+from urllib3 import HTTPConnectionPool,ProxyManager
 
 logger = logging.getLogger('crawler')
 
@@ -26,7 +26,7 @@ def dump_queue(queue):
 def setThreads(n):
     global THREADS
     global pool
-    pool = HTTPConnectionPool('201.224.39.199', maxsize=n)
+    pool = ProxyManager('http://localhost:8118', num_pools=n)
     THREADS = n 
 
 def spawn_html_processing_thread(html_queue):
@@ -35,7 +35,7 @@ def spawn_html_processing_thread(html_queue):
     thread.start()
     return thread
 
-def brute_sociedades(iterator=xrange(db_worker.find_max_ficha(),10000000),skip_old=True):
+def brute_sociedades(iterator=range(db_worker.find_max_ficha(),10000000),skip_old=True):
     if skip_old:
         old_fichas = db_worker.get_fichas()
         fichas = [ficha for ficha in iterator if ficha not in old_fichas]
@@ -59,8 +59,8 @@ def brute_sociedades(iterator=xrange(db_worker.find_max_ficha(),10000000),skip_o
     return db_worker.find_by_fichas(fichas)
 
 def spawn_ficha_queries(fichas,html_queue,n):
-    for i in xrange(n):
-        query = FichaQuery(fichas.next(),html_queue,pool)
+    for i in range(n):
+        query = FichaQuery(next(fichas),html_queue,pool)
         query.setDaemon(True)
         query.start()
 
@@ -83,14 +83,15 @@ def query(query):
     return brute_sociedades(iter(fichas),False)
      
 def spawn_queries(query,n,start_page,html_queue):
-  queries = [Query(query_url(i,query),html_queue,pool) for i in xrange(start_page,start_page+(15*n),15)]
+  queries = [Query(query_url(i,query),html_queue,pool) for i in range(start_page,start_page+(15*n),15)]
   for query in queries: 
     query.setDaemon(True)
     query.start()
   return [queries,start_page + (15*n)]
 
 def parse_query_result(html):
-    sociedades = BeautifulSoup(html,"html.parser", parse_only=SoupStrainer('table')).find('th',text='NOMBRE SOCIEDAD').parent.next_siblings
+    soup = BeautifulSoup(html,"html.parser", parse_only=SoupStrainer('table'),from_encoding='latin-1')
+    sociedades = soup.find('th',text='NOMBRE SOCIEDAD').parent.next_siblings
     fichas = [int(row.find('a').string) for row in sociedades if row.td.string is not None]
     return fichas
 
@@ -98,8 +99,8 @@ def process_html_queue(html_queue):
     return [parse_query_result(html) for html in dump_queue(html_queue)]
 
 def spawn_sociedad_queries(sociedades,n,sociedades_queue):
-    for i in xrange(n):
-        query = SociedadQuery(sociedades.next(),sociedades_queue,html_queue,pool)
+    for i in range(n):
+        query = SociedadQuery(next(sociedades),sociedades_queue,html_queue,pool)
         query.setDaemon(True)
         query.start()
         queries.append(query)

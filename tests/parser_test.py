@@ -10,11 +10,14 @@ from time import sleep
 class TestParser(unittest.TestCase):
 
     def setUp(self):
-        self.html = open('tests/test.html').read()
-        self.soup = BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('p'))
+        self.html = open('tests/test.html', encoding='latin-1')
+        self.soup = BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('p'),from_encoding='latin-1')
 
     def test_agente(self):
         self.assertEqual(parser.collect_agente(self.soup),"BUFETE MF & CO.")
+
+    def test_ficha(self):
+        self.assertEqual(parser.collect_ficha(self.soup),617214)
 
     def test_capital(self):
         self.assertEqual(parser.collect_capital(self.soup),float(10000.0))
@@ -23,10 +26,10 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.collect_capital_text(self.soup),"EL CAPITAL AUTORIZADO DE LA SOCIEDAD ES DE 10,000.00 DOLARES AMERICANOSDIVIDIDO EN 100 ACCIONES, QUE PODRAN SER NOMINATIVAS O AL PORTADOR, DEUN VALOR NOMINAL DE 100.00 DOLARES CADA UNA.")
 
     def test_dignatarios(self):
-        self.assertEqual(parser.collect_dignatarios(self.soup),[(u'PRESIDENTE', u'GEORGE ALLEN'), (u'VICE-PRESIDENTE', u'YVETTE ROGERS'), (u'TESORERO', u'YVETTE ROGERS'), (u'SECRETARIO', u'CARMEN WONG'), (u'SUB-SECRETARIO', u'JAQUELINE ALEXANDER'), (u'SUB-SECRETARIO', u'VERNA DE NELSON')])
+        self.assertEqual(parser.collect_dignatarios(self.soup),{'PRESIDENTE':['GEORGE ALLEN'], 'VICE-PRESIDENTE': ['YVETTE ROGERS'],'TESORERO': ['YVETTE ROGERS'], 'SECRETARIO': ['CARMEN WONG'], 'SUB-SECRETARIO': ['JAQUELINE ALEXANDER', 'VERNA DE NELSON']})
 
     def test_directores(self):
-        self.assertEqual(parser.collect_directores(self.soup),[u'GEORGE ALLEN', u'CARMEN WONG', u'YVETTE ROGERS', u'JAQUELINE ALEXANDER', u'VERNA DE NELSON'])
+        self.assertEqual(parser.collect_directores(self.soup),['GEORGE ALLEN', 'CARMEN WONG', 'YVETTE ROGERS', 'JAQUELINE ALEXANDER', 'VERNA DE NELSON'])
 
     def test_duracion(self):
         self.assertEqual(parser.collect_duracion(self.soup),"PERPETUA")
@@ -53,7 +56,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.collect_status(self.soup),"VIGENTE")
 
     def test_subscriptores(self):
-        self.assertEqual(parser.collect_subscriptores(self.soup),[u'ENDERS INC.', u'ROCKALL INC.'])
+        self.assertEqual(parser.collect_subscriptores(self.soup),['ENDERS INC.', 'ROCKALL INC.'])
 
 
 if __name__ == '__main__':

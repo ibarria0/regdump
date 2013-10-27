@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/python3.3
 import sys
 import argparse
 import os
@@ -6,7 +6,7 @@ import requests
 import logging.config
 import yaml
     
-from itertools import izip
+
 import Classes
 import re
 from modules import parser

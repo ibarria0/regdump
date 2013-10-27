@@ -3,68 +3,80 @@ from modules import db_worker,parser
 from Classes import Sociedad,Persona,Asociacion
 from time import sleep
 from bs4 import BeautifulSoup,SoupStrainer
-from Queue import Empty
+from queue import Empty
+
 
 def parse_sociedad_html(html):
-    soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
-    sociedad = Sociedad(parser.collect_nombre(soup),parser.collect_ficha(soup))
-    scrape_sociedad_data(sociedad,soup)
-    asociaciones = scrape_sociedad_personas(sociedad,soup)
-    return resolve_sociedad(sociedad,asociaciones)
+    soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'),from_encoding='latin-1')
+    sociedad = scrape_sociedad_data(soup)
+    personas,asociaciones = scrape_personas(soup)
+    return resolve_sociedad(sociedad,personas,asociaciones)
 
-def resolve_sociedad(sociedad,asociaciones):
-    real_personas = set()
+def resolve_sociedad(sociedad,personas,asociaciones):
     sociedad = db_worker.find_or_create_sociedades([sociedad])[0]
-    for rol,personas in asociaciones.iteritems():
-        new_personas = [persona for persona in personas if persona not in real_personas]
-        new_personas = set(db_worker.find_or_create_personas(new_personas))
-        real_personas.update(new_personas)
-        resolved_personas = [persona for persona in real_personas if persona in personas]
-        db_worker.find_or_create_asociaciones(resolved_personas,sociedad,rol) #create associations
-    print sociedad.nombre,len(sociedad.personas)
+    personas = db_worker.find_or_create_personas(personas)
+    asociaciones = resolve_asociaciones(personas,asociaciones)
+    for rol in asociaciones.keys():
+        db_worker.find_or_create_asociaciones(asociaciones[rol],sociedad,rol) #create associations
+    print(sociedad.nombre,len(sociedad.personas))
     return sociedad
 
-def scrape_sociedad_personas(sociedad,html):
-    directores = scrape_sociedad_directores(sociedad,html)
-    subscriptores = scrape_sociedad_subscriptores(sociedad,html)
-    dignatarios = scrape_sociedad_dignatarios(sociedad,html)
-    return dict({'directores':directores, 'subscriptores':subscriptores}.items() +  {tupl[0]:[tupl[1]] for tupl in dignatarios}.items())
+def resolve_asociaciones(personas,asociaciones):
+    personas = list(personas)
+    for key in asociaciones.keys():
+        tmp = set() 
+        for persona in asociaciones[key]:
+            tmp.add(personas[personas.index(persona)])
+        asociaciones[key] = tmp
+    return asociaciones 
 
-def scrape_sociedad_directores(sociedad,html):
+def scrape_personas(soup):
+    directores = scrape_sociedad_directores(soup)
+    subscriptores = scrape_sociedad_subscriptores(soup)
+    dignatarios = scrape_sociedad_dignatarios(soup)
+    personas = set().union(*[directores, unpack_personas_in_dignatarios(dignatarios), subscriptores])
+    asociaciones = dict(list({'directores':directores, 'subscriptores':subscriptores}.items()) + list(dignatarios.items()))
+    return [personas,asociaciones]
+
+def scrape_sociedad_directores(soup):
     try:
-        directores = [Persona(persona) for persona in parser.collect_directores(html)]
+        directores = {Persona(persona) for persona in parser.collect_directores(soup)}
     except Exception as e:
-        print e
-        return []
+        print(e)
+        return set()
     return directores
 
-def scrape_sociedad_subscriptores(sociedad,html):
+def scrape_sociedad_subscriptores(soup):
     try:
-        subscriptores = [Persona(persona) for persona in parser.collect_subscriptores(html)]
+        subscriptores = {Persona(persona) for persona in parser.collect_subscriptores(soup)}
     except Exception as e:
-        print e
-        return []
+        print(e)
+        return {}
     return subscriptores
 
-def scrape_sociedad_dignatarios(sociedad,html):
+def scrape_sociedad_dignatarios(soup):
   try:
-      dignatarios = parser.collect_dignatarios(html)
-      dignatarios = [(pair[0],Persona(pair[1])) for pair in dignatarios]
+      dignatarios = { item[0]: {Persona(value) for value in item[1]} for item in parser.collect_dignatarios(soup).items()}
   except Exception as e:
-    return []
+    print(e)
+    return {}
   return dignatarios
 
-def scrape_sociedad_data(sociedad,html):
-    sociedad.fecha_registro = parser.collect_fecha_registro(html)
-    sociedad.provincia = parser.collect_provincia(html)
-    sociedad.notaria = parser.collect_notaria(html)
-    sociedad.duracion = parser.collect_duracion(html)
-    sociedad.stats = parser.collect_status(html)
-    sociedad.agente = parser.collect_agente(html)
-    sociedad.moneda = parser.collect_moneda(html)
-    sociedad.capital = parser.collect_capital(html)
-    sociedad.capital_text = parser.collect_capital_text(html)
-    sociedad.representante_text = parser.collect_representante_text(html)
+def unpack_personas_in_dignatarios(dignatarios):
+    return {val for sublist in dignatarios.values() for val in sublist}
+
+def scrape_sociedad_data(soup):
+    sociedad = Sociedad(parser.collect_nombre(soup),parser.collect_ficha(soup))
+    sociedad.fecha_registro = parser.collect_fecha_registro(soup)
+    sociedad.provincia = parser.collect_provincia(soup)
+    sociedad.notaria = parser.collect_notaria(soup)
+    sociedad.duracion = parser.collect_duracion(soup)
+    sociedad.status = parser.collect_status(soup)
+    sociedad.agente = parser.collect_agente(soup)
+    sociedad.moneda = parser.collect_moneda(soup)
+    sociedad.capital = parser.collect_capital(soup)
+    sociedad.capital_text = parser.collect_capital_text(soup)
+    sociedad.representante_text = parser.collect_representante_text(soup)
     return sociedad
 
 class ProcessHTML(Thread):
@@ -84,6 +96,6 @@ class ProcessHTML(Thread):
             if started == True:
                 return
         except Exception as e:
-                print e
+                print(e)
                 sleep(0.1)
 

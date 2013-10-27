@@ -5,7 +5,7 @@ from sqlalchemy.types import Unicode, UnicodeText
 from sqlalchemy.orm import relationship,backref
 from datetime import datetime
 import requests
-from itertools import izip
+
 from bs4 import BeautifulSoup,SoupStrainer
 
 Base = declarative_base()
@@ -30,7 +30,7 @@ class Sociedad(Base):
   personas = relationship("Asociacion")
 
   def __init__(self,nombre,ficha):
-    self.nombre = unicode(nombre)
+    self.nombre = str(nombre)
     self.ficha = ficha
     self.visited = False
     self.html = None
@@ -47,7 +47,8 @@ class Sociedad(Base):
   def __repr__(self):
     return "Sociedad(%s)" % (self.ficha)
 
-
+  def __eq__(self,other):
+    return self.ficha == other.ficha
     
 class Asociacion(Base):
   __tablename__ = 'asociaciones'
@@ -94,6 +95,9 @@ class Persona(Base):
     return getattr(self, key)
 
   def __str__(self):
+    return "Persona(%s)" % (self.nombre)
+
+  def __repr__(self):
     return "Persona(%s)" % (self.nombre)
 
   def __eq__(self,other):
