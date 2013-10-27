@@ -23,7 +23,7 @@ class Sociedad(Base):
   fecha_registro = deferred(Column(Date))
   capital_text = deferred(Column(UnicodeText))
   representante_text = deferred(Column(UnicodeText))
-  status = deferred(Column(Unicode(15)))
+  status = deferred(Column(Unicode(35)))
   duracion = deferred(Column(Unicode(15)))
   provincia = deferred(Column(Unicode(25)))
   visited = Column(Boolean)
