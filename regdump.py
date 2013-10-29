@@ -2,16 +2,11 @@
 import sys
 import argparse
 import os
-import requests
 import logging.config
 import yaml
-    
-
 import Classes
-import re
 from modules import parser
 from modules import crawler
-from multiprocessing import Pool,cpu_count
 
 abspath = os.path.abspath(__file__)
 dname = os.path.dirname(abspath)
