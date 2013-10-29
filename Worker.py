@@ -5,12 +5,12 @@ from time import sleep
 from bs4 import BeautifulSoup,SoupStrainer
 from queue import Empty
 
-
 def parse_sociedad_html(html):
     soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'),from_encoding='latin-1')
-    sociedad = scrape_sociedad_data(soup)
-    personas,asociaciones = scrape_personas(soup)
-    return resolve_sociedad(sociedad,personas,asociaciones)
+    if parser.exists(soup):
+        sociedad = scrape_sociedad_data(soup)
+        personas,asociaciones = scrape_personas(soup)
+        return resolve_sociedad(sociedad,personas,asociaciones)
 
 def resolve_sociedad(sociedad,personas,asociaciones):
     sociedad = db_worker.find_or_create_sociedades([sociedad])[0]
@@ -94,6 +94,7 @@ class ProcessHTML(Thread):
             started = True
         except Empty:
             if started == True:
+                print('worker is dead')
                 return
         except Exception as e:
                 print(e)

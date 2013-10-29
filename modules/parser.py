@@ -2,6 +2,13 @@ import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 
+def exists(soup):
+    try:
+        nombre = soup.find(text="Nombre de la Sociedad:").parent.parent.parent.parent.find_next('td').string
+        if nombre: return True
+    except:
+        return False
+
 def collect_dignatarios(soup):
     dignatarios = {}
     cells = [str(cell.string) for cell in soup.find(text='Nombre del Dignatario').find_parent('table').find_next_sibling('table').find_all('td') if cell.string != None]
@@ -29,7 +36,7 @@ def collect_moneda(soup):
   return str(soup.find('td',text='Moneda: ').find_next_sibling('td').string)
 
 def collect_ficha(soup):
-  return int(soup.find(text=re.compile("de Ficha")).parent.parent.parent.find_next_sibling().p.string)
+  return int(soup.find(text='No. Documento:').parent.parent.parent.find_previous_sibling().p.string)
 
 def collect_nombre(soup):
   return str(soup.find(text="Nombre de la Sociedad:").parent.parent.parent.parent.find_next('td').string)
@@ -42,7 +49,10 @@ def collect_notaria(soup):
 
 def collect_fecha_registro(soup):
   fecha = soup.find('td',text='Fecha de Registro:').find_next_sibling('td').string
-  return datetime.strptime(fecha, "%d-%m-%Y" ).date()
+  try:
+    return datetime.strptime(fecha, "%d-%m-%Y" ).date()
+  except:
+    return None
 
 def collect_status(soup):
   return str(soup.find('td',text='Status:').find_next_sibling('td').string)
