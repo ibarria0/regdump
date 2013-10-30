@@ -8,11 +8,13 @@ from bs4 import BeautifulSoup,SoupStrainer
 from datetime import datetime
 from random import randint
 from time import sleep
+html = open('tests/test.html', encoding='latin-1')
+soup = BeautifulSoup(html,'html.parser',parse_only=SoupStrainer('p'),from_encoding='latin-1')
 
 class TestWorker(unittest.TestCase):
 
     def setUp(self):
-        self.html = open('tests/test.html', encoding='latin-1')
+        self.soup = soup
         self.sociedad = Sociedad('BACON MANAGEMENT INC.',617214)
         self.sociedad.agente = "BUFETE MF & CO."
         self.sociedad.capital = float(10000.0)
@@ -28,7 +30,6 @@ class TestWorker(unittest.TestCase):
         self.sociedad.status = "VIGENTE"
         self.sociedad.subscriptores = {Persona(p) for p in ['ENDERS INC.', 'ROCKALL INC.']}
         self.sociedad.asociaciones = dict(list({'directores': self.sociedad.directores, 'subscriptores':self.sociedad.subscriptores}.items()) + list(self.sociedad.dignatarios.items()))
-        self.soup = BeautifulSoup(self.html,'html.parser',parse_only=SoupStrainer('p'),from_encoding='latin-1')
 
     def test_scrape_sociedad_directores(self):
         personas = Worker.scrape_sociedad_directores(self.soup)
