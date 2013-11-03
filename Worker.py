@@ -88,7 +88,7 @@ class ProcessHTML(Thread):
     started = False
     while True:
         try:
-            html = self.html_queue.get(timeout=10)
+            html = self.html_queue.get(timeout=20)
             parse_sociedad_html(html)
             self.html_queue.task_done()
             started = True
