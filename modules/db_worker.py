@@ -29,8 +29,9 @@ def find_max_ficha():
 
 def get_fichas():
     try:
-        return set(zip(*session.query(Classes.Sociedad.ficha).all())[0])
-    except:
+        return {sociedad.ficha for sociedad in session.query(Classes.Sociedad).all()}
+    except Exception as e:
+        print(e)
         return set()
 
 def get_personas():
