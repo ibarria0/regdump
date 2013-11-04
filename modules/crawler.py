@@ -26,7 +26,7 @@ def dump_queue(queue):
 def setThreads(n):
     global THREADS
     global pool
-    pool = ProxyManager('http://localhost:8118', num_pools=n)
+    pool = HTTPConnectionPool('201.224.39.199:80', maxsize=n)
     THREADS = n 
 
 def spawn_html_processing_thread(html_queue):
@@ -35,10 +35,10 @@ def spawn_html_processing_thread(html_queue):
     thread.start()
     return thread
 
-def brute_sociedades(iterator=range(db_worker.find_max_ficha(),10000000),skip_old=True):
+def brute_sociedades(iterator=range(0,10000000),skip_old=True):
     if skip_old:
         old_fichas = db_worker.get_fichas()
-        fichas = [ficha for ficha in iterator if ficha not in old_fichas]
+        fichas = [ficha for ficha in list(iterator) if ficha not in old_fichas]
     else:
         fichas = list(iterator)
     if len(fichas) > 0:

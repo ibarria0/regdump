@@ -43,6 +43,6 @@ class FichaQuery(Thread):
     return
 
   def get_ficha_html(self):
-    url = 'http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
+    url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
     response = self.pool.request('GET', url)
     return response.data
