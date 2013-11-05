@@ -13,9 +13,9 @@ Base = declarative_base()
 class Sociedad(Base):
   __tablename__ = 'sociedades'
   
-  id = Column(Integer, Sequence('sociedad_id_seq'))
-  nombre= Column(Unicode(200))
-  ficha = Column(Integer(15), primary_key=True)
+  id = Column(Integer, Sequence('sociedad_id_seq'), unique=True)
+  nombre= Column(Unicode(200), primary_key=True)
+  ficha = Column(Integer(15))
   capital = deferred(Column(Float(15)))
   moneda = deferred(Column(Unicode(50)))
   agente = deferred(Column(Unicode(200)))
@@ -80,7 +80,7 @@ class Asociacion(Base):
 class Persona(Base):
   __tablename__ = 'personas'
   
-  id = Column(Integer, Sequence('persona_id_seq'))
+  id = Column(Integer, Sequence('persona_id_seq'), unique=True)
   nombre = Column(Unicode(100), primary_key=True)
   sociedades = relationship(Asociacion)
 
