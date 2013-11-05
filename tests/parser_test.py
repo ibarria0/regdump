@@ -6,8 +6,10 @@ from bs4 import BeautifulSoup,SoupStrainer
 from decimal import Decimal
 from datetime import datetime
 from time import sleep
-html = open('tests/test.html', encoding='latin-1')
-html_false = open('tests/test_false.html', encoding='latin-1')
+with open('tests/test.html', encoding='latin-1') as f:
+    html = f.read()
+with open('tests/test_false.html', encoding='latin-1') as f:
+    html_false = f.read()
 soup = BeautifulSoup(html,'html.parser',parse_only=SoupStrainer('p'),from_encoding='latin-1')
 soup_false = BeautifulSoup(html_false,'html.parser',parse_only=SoupStrainer('p'),from_encoding='latin-1')
 
@@ -20,8 +22,8 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.collect_agente(self.soup),"BUFETE MF & CO.")
 
     def test_exists(self):
-        self.assertFalse(parser.exists(soup_false))
-        self.assertTrue(parser.exists(soup))
+        self.assertFalse(parser.exists(html_false))
+        self.assertTrue(parser.exists(html))
 
     def test_ficha(self):
         self.assertEqual(parser.collect_ficha(self.soup),617214)

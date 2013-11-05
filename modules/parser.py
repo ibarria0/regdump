@@ -2,16 +2,16 @@ import re
 from datetime import datetime
 from bs4 import BeautifulSoup
 
-def exists(soup):
-    try:
-        nombre = soup.find(text="Nombre de la Sociedad:").parent.parent.parent.parent.find_next('td').string
-        if nombre: return True
-    except:
+def exists(html):
+    exists = re.compile('No se encontr.*')
+    match = exists.search(html)
+    if match:
         return False
+    return True
 
 def collect_dignatarios(soup):
     dignatarios = {}
-    cells = [str(cell.string) for cell in soup.find(text='Nombre del Dignatario').find_parent('table').find_next_sibling('table').find_all('td') if cell.string != None]
+    cells = [str(cell.string) for cell in soup.find('font',text='Nombre del Dignatario').find_parent('table').find_next_sibling('table').find_all('td') if cell.string != None]
     for asoc in list(zip(cells[0::2],cells[1::2])):
         try:
             dignatarios[asoc[0]].append(asoc[1])
