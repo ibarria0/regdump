@@ -35,28 +35,33 @@ def spawn_html_processing_thread(html_queue):
     thread.start()
     return thread
 
-def brute_sociedades(iterator=range(0,10000000),skip_old=True):
+def ficha_generator(old_fichas):
+    for i in range(0,10000000):
+        if i not in old_fichas:
+            yield i
+        else:
+            continue
+
+def brute_sociedades(skip_old=True):
     if skip_old:
         old_fichas = db_worker.get_fichas()
-        fichas = [ficha for ficha in list(iterator) if ficha not in old_fichas]
+        fichas = ficha_generator(old_fichas)
     else:
-        fichas = list(iterator)
-    if len(fichas) > 0:
-        fichas_iter = iter(fichas)
-        html_queue = Queue()
-        processing_thread = spawn_html_processing_thread(html_queue)
-        while True:
-            try:
-                spawn_ficha_queries(fichas_iter,html_queue,THREADS - active_count() + 1)
-                sleep(0.1)
-            except StopIteration:
-                while active_count() > 2: sleep(0.1)
-                break
-            except AttributeError:
-                continue
-        logger.info('done scraping - waiting on processing')
-        processing_thread.join()
-    return db_worker.find_by_fichas(fichas)
+        fichas = range(0,10000000)
+    html_queue = Queue()
+    processing_thread = spawn_html_processing_thread(html_queue)
+    while True:
+        try:
+            spawn_ficha_queries(fichas,html_queue,THREADS - active_count() + 1)
+            sleep(0.1)
+        except StopIteration:
+            while active_count() > 2: sleep(0.1)
+            break
+        except AttributeError:
+            continue
+    logger.info('done scraping - waiting on processing')
+    processing_thread.join()
+    return True
 
 def spawn_ficha_queries(fichas,html_queue,n):
     for i in range(n):
