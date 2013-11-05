@@ -3,12 +3,15 @@ from datetime import datetime
 from bs4 import BeautifulSoup
 
 def sanitize(string):
-    return str(re.sub(' +',' ', string.strip()))
+    if string:
+        return str(re.sub(' +',' ', string.strip()))
+    else:
+        return None
 
 def exists(html):
     exists = re.compile('No se encontr.*')
-    match = exists.search(html)
-    if match:
+    exists2 = re.compile('Datos insuficientes para consultar.*')
+    if exists.search(html) or exists2.search(html):
         return False
     return True
 
