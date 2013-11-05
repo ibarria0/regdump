@@ -94,7 +94,7 @@ class ProcessHTML(Thread):
             started = True
         except Empty:
             if started == True:
-                print('worker is dead')
+                raise Exception('worker is dead')
                 return
         except Exception as e:
                 print(e)
