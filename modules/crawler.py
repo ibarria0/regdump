@@ -36,7 +36,7 @@ def spawn_html_processing_thread(html_queue):
     return thread
 
 def ficha_generator(old_fichas):
-    for i in range(0,10000000):
+    for i in range(500000,10000000):
         if i not in old_fichas:
             yield i
         else:

@@ -45,4 +45,4 @@ class FichaQuery(Thread):
   def get_ficha_html(self):
     url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
     response = self.pool.request('GET', url)
-    return response.data
+    return response.data.decode('ISO-8859-1','ignore')

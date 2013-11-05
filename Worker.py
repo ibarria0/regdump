@@ -7,7 +7,7 @@ from queue import Empty
 
 def parse_sociedad_html(html):
     if parser.exists(html):
-        soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'),from_encoding='latin-1')
+        soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
         sociedad = scrape_sociedad_data(soup)
         personas,asociaciones = scrape_personas(soup)
         return resolve_sociedad(sociedad,personas,asociaciones)
