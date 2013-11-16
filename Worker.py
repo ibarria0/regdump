@@ -4,12 +4,18 @@ from Classes import Sociedad,Persona,Asociacion
 from time import sleep
 from bs4 import BeautifulSoup,SoupStrainer
 from queue import Empty
+import logging
+
+logger = logging.getLogger('worker')
 
 def parse_sociedad_html(html):
     if parser.exists(html):
         soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
         sociedad = scrape_sociedad_data(soup)
+        logger.info('found sociedad %s', sociedad.nombre)
         personas,asociaciones = scrape_personas(soup)
+        logger.info('found %i personas', len(personas))
+        logger.info('found %i asociaciones', len(asociaciones))
         return resolve_sociedad(sociedad,personas,asociaciones)
 
 def resolve_sociedad(sociedad,personas,asociaciones):
@@ -18,7 +24,7 @@ def resolve_sociedad(sociedad,personas,asociaciones):
     asociaciones = resolve_asociaciones(personas,asociaciones)
     for rol in asociaciones.keys():
         db_worker.find_or_create_asociaciones(asociaciones[rol],sociedad,rol) #create associations
-    print(sociedad.nombre,len(sociedad.personas))
+    logger.info('sociedad %s resolved', sociedad.nombre)
     return sociedad
 
 def resolve_asociaciones(personas,asociaciones):

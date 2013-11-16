@@ -27,5 +27,11 @@ loggers:
     level: INFO 
     handlers: [console,file]
     propagate: no
+  worker:
+    level: INFO 
+    handlers: [console,file]
+    propagate: no
+
+
 
 
