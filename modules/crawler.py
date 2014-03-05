@@ -27,7 +27,7 @@ def setThreads(n):
     global THREADS
     global pool
     pool = HTTPConnectionPool('201.224.39.199:80', maxsize=n)
-    THREADS = n 
+    THREADS = n
 
 def spawn_html_processing_thread(html_queue):
     thread = ProcessHTML(html_queue)
@@ -52,8 +52,8 @@ def brute_sociedades(skip_old=True):
     processing_thread = spawn_html_processing_thread(html_queue)
     while True:
         try:
-            spawn_ficha_queries(fichas,html_queue,THREADS - active_count() + 1)
-            sleep(0.1)
+            spawn_ficha_queries(fichas,html_queue,THREADS - active_count() + 2)
+            sleep(5)
         except StopIteration:
             while active_count() > 2: sleep(0.1)
             break
@@ -86,10 +86,10 @@ def query_registro_publico(query):
 def query(query):
     fichas = query_registro_publico(query)
     return brute_sociedades(iter(fichas),False)
-     
+
 def spawn_queries(query,n,start_page,html_queue):
   queries = [Query(query_url(i,query),html_queue,pool) for i in range(start_page,start_page+(15*n),15)]
-  for query in queries: 
+  for query in queries:
     query.setDaemon(True)
     query.start()
   return [queries,start_page + (15*n)]
