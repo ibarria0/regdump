@@ -71,7 +71,7 @@ class Asociacion(Base):
     return "Asociacion(%s : %s)" % (self.persona,self.sociedad)
 
   def __hash__(self):
-    return hash(self.socidedad_id, self.persona_id, self.rol)
+    return hash(self.sociedad_id, self.persona_id, self.rol)
 
   def __eq__(self,other):
     return (self.persona_id == other.persona_id and self.sociedad_id == other.persona_id and self.rol == other.rol)
