@@ -16,16 +16,7 @@ def parse_sociedad_html(html):
         personas,asociaciones = scrape_personas(soup)
         logger.info('found %i personas', len(personas))
         logger.info('found %i asociaciones', len(asociaciones))
-        return resolve_sociedad(sociedad,personas,asociaciones)
-
-def resolve_sociedad(sociedad,personas,asociaciones):
-    sociedad = db_worker.find_or_create_sociedades([sociedad])[0]
-    personas = db_worker.find_or_create_personas(personas)
-    asociaciones = resolve_asociaciones(personas,asociaciones)
-    for rol in asociaciones.keys():
-        db_worker.find_or_create_asociaciones(asociaciones[rol],sociedad,rol) #create associations
-    logger.info('sociedad %s resolved', sociedad.nombre)
-    return sociedad
+        return db_worker.resolve_sociedad(sociedad,personas,asociaciones)
 
 def resolve_asociaciones(personas,asociaciones):
     personas = list(personas)
