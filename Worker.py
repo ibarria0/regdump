@@ -18,15 +18,6 @@ def parse_sociedad_html(html):
         logger.info('found %i asociaciones', len(asociaciones))
         return db_worker.resolve_sociedad(sociedad,personas,asociaciones)
 
-def resolve_asociaciones(personas,asociaciones):
-    personas = list(personas)
-    for key in asociaciones.keys():
-        tmp = set() 
-        for persona in asociaciones[key]:
-            tmp.add(personas[personas.index(persona)])
-        asociaciones[key] = tmp
-    return asociaciones 
-
 def scrape_personas(soup):
     directores = scrape_sociedad_directores(soup)
     subscriptores = scrape_sociedad_subscriptores(soup)
