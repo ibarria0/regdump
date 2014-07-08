@@ -1,4 +1,5 @@
 from threading import Thread
+from urllib3 import make_headers
 
 class Query(Thread):
   def __init__(self,url,html_queue,pool):
@@ -26,7 +27,7 @@ class SociedadQuery(Thread):
 
   def get_ficha_html(self):
     url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.sociedad.ficha)
-    response = self.pool.request('GET', url)
+    response = self.pool.request('GET', url, headers=make_headers(user_agent="Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"))
     self.sociedad.html = response.data
     return True
 
@@ -44,5 +45,5 @@ class FichaQuery(Thread):
 
   def get_ficha_html(self):
     url = '/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(self.ficha)
-    response = self.pool.request('GET', url)
+    response = self.pool.request('GET', url, headers=make_headers(user_agent="Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36"))
     return response.data.decode('ISO-8859-1','ignore')
