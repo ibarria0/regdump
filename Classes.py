@@ -14,18 +14,18 @@ class Sociedad(Base):
   __tablename__ = 'sociedades'
   
   id = Column(Integer, Sequence('sociedad_id_seq'), unique=True)
-  nombre= Column(Unicode(200), primary_key=True)
-  ficha = Column(Integer(15))
-  capital = deferred(Column(Float(15)))
-  moneda = deferred(Column(Unicode(50)))
-  agente = deferred(Column(Unicode(200)))
-  notaria = deferred(Column(Unicode(50)))
+  nombre= Column(Unicode, primary_key=True)
+  ficha = Column(Integer)
+  capital = deferred(Column(Float))
+  moneda = deferred(Column(Unicode))
+  agente = deferred(Column(Unicode))
+  notaria = deferred(Column(Unicode))
   fecha_registro = deferred(Column(Date))
   capital_text = deferred(Column(UnicodeText))
   representante_text = deferred(Column(UnicodeText))
-  status = deferred(Column(Unicode(35)))
-  duracion = deferred(Column(Unicode(15)))
-  provincia = deferred(Column(Unicode(25)))
+  status = deferred(Column(Unicode))
+  duracion = deferred(Column(Unicode))
+  provincia = deferred(Column(Unicode))
   visited = Column(Boolean)
   personas = relationship("Asociacion")
 
@@ -55,7 +55,7 @@ class Asociacion(Base):
   
   persona_id = Column(Integer, ForeignKey('personas.id'), primary_key=True)
   sociedad_id = Column(Integer, ForeignKey('sociedades.id'), primary_key=True)
-  rol = Column(String(20), primary_key=True)
+  rol = Column(String, primary_key=True)
   sociedad = relationship(Sociedad)
   persona = relationship("Persona")
 
@@ -81,7 +81,7 @@ class Persona(Base):
   __tablename__ = 'personas'
   
   id = Column(Integer, Sequence('persona_id_seq'), unique=True)
-  nombre = Column(Unicode(100), primary_key=True)
+  nombre = Column(Unicode, primary_key=True)
   sociedades = relationship(Asociacion)
 
   def __init__(self,nombre):
