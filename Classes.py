@@ -12,10 +12,9 @@ Base = declarative_base()
 
 class Sociedad(Base):
   __tablename__ = 'sociedades'
-  
-  id = Column(Integer, Sequence('sociedad_id_seq'), unique=True)
-  nombre= Column(Unicode, primary_key=True)
-  ficha = Column(Integer)
+
+  nombre= Column(Unicode, unique=True)
+  ficha = Column(Integer, primary_key=True)
   capital = deferred(Column(Float))
   moneda = deferred(Column(Unicode))
   agente = deferred(Column(Unicode))
@@ -34,7 +33,7 @@ class Sociedad(Base):
     self.ficha = ficha
     self.visited = False
     self.html = None
-    
+
   def __getitem__(self,key):
     return getattr(self, key)
 
@@ -49,12 +48,12 @@ class Sociedad(Base):
 
   def __eq__(self,other):
     return self.ficha == other.ficha
-    
+
 class Asociacion(Base):
   __tablename__ = 'asociaciones'
-  
-  persona_id = Column(Integer, ForeignKey('personas.id'), primary_key=True)
-  sociedad_id = Column(Integer, ForeignKey('sociedades.id'), primary_key=True)
+
+  persona_id = Column(Unicode, ForeignKey('personas.nombre'), primary_key=True)
+  sociedad_id = Column(Integer, ForeignKey('sociedades.ficha'), primary_key=True)
   rol = Column(String, primary_key=True)
   sociedad = relationship(Sociedad)
   persona = relationship("Persona")
@@ -63,7 +62,7 @@ class Asociacion(Base):
     self.persona_id = persona_id
     self.sociedad_id = sociedad_id
     self.rol = rol
-    
+
   def __getitem__(self,key):
     return getattr(self, key)
 
@@ -79,8 +78,7 @@ class Asociacion(Base):
 
 class Persona(Base):
   __tablename__ = 'personas'
-  
-  id = Column(Integer, Sequence('persona_id_seq'), unique=True)
+
   nombre = Column(Unicode, primary_key=True)
   sociedades = relationship(Asociacion)
 

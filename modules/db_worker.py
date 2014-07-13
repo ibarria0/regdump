@@ -6,7 +6,7 @@ from time import sleep
 import logging
 
 db_url = os.environ['panadata_db']
-engine = create_engine(db_url,  encoding='latin-1',echo=False)
+engine = create_engine(db_url, convert_unicode=True, encoding='latin-1',echo=False)
 session_maker = sessionmaker(bind=engine)
 Classes.Base.metadata.create_all(engine)
 logger = logging.getLogger('db_worker')
@@ -36,6 +36,7 @@ def resolve_sociedad(sociedad,personas,asociaciones):
             session.rollback()
             session.expunge_all()
             continue
+    session.expunge_all()
     session.close()
     return sociedad
 
@@ -93,11 +94,24 @@ def find_or_create_personas(personas,session):
 
 def find_or_create_asociaciones(personas,sociedad,rol,session):
     if len(personas) > 0:
-        persona_ids = [persona.id for persona in personas]
-        query = session.query(Classes.Asociacion).filter(Classes.Asociacion.sociedad_id==sociedad.id)
-        asociaciones = [Classes.Asociacion(persona.id,sociedad.id,str(rol.upper())) for persona in personas]
+        persona_ids = [persona.nombre for persona in personas]
+        query = session.query(Classes.Asociacion).filter(Classes.Asociacion.sociedad_id==sociedad.ficha)
+        asociaciones = [Classes.Asociacion(persona.nombre,sociedad.ficha,str(rol.upper())) for persona in personas]
         result = list(query.merge_result(asociaciones))
         session.commit()
         return result
     else:
         return []
+
+def get_sociedades():
+    session = session_maker()
+    sociedades = set()
+    try:
+        sociedades= {sociedad.nombre for sociedad in session.query(Classes.Sociedad).all()}
+    except Exception as e:
+        print(e)
+    finally:
+        session.expunge_all()
+        session.close()
+        return sociedades
+

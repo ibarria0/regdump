@@ -36,8 +36,9 @@ def spawn_html_processing_thread(html_queue):
     return thread
 
 def ficha_generator(old_fichas):
-    for i in range(0,10000000):
+    for i in range(499977,5000,-1):
         if i not in old_fichas:
+            print(i)
             yield i
         else:
             continue
@@ -76,9 +77,10 @@ def query_registro_publico(query):
   logger.info('initializing queries with %i threads', THREADS)
   while (len(results) % 15 == 0 ):
     queries,page = spawn_queries(query,(THREADS - active_count() + 1),page,html_queue) #fill thread pool
+    queries = list(filter(lambda x: x.is_alive(),queries))
     results.extend(process_html_queue(html_queue))
     if not all(results): break #there is a false in results so this is done
-    sleep(0.1)
+    sleep(3)
   while any([query.is_alive() for query in queries]): sleep(1) #wait for pending threads
   results.extend(process_html_queue(html_queue))
   return [item for sublist in results for item in sublist if item is not False]
@@ -88,6 +90,7 @@ def query(query):
     return brute_sociedades(iter(fichas),False)
 
 def spawn_queries(query,n,start_page,html_queue):
+  print(n)
   queries = [Query(query_url(i,query),html_queue,pool) for i in range(start_page,start_page+(15*n),15)]
   for query in queries:
     query.setDaemon(True)
