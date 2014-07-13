@@ -52,7 +52,7 @@ class Sociedad(Base):
 class Asociacion(Base):
   __tablename__ = 'asociaciones'
 
-  persona_id = Column(Unicode, ForeignKey('personas.nombre'), primary_key=True)
+  persona_id = Column(Integer , ForeignKey('personas.id'), primary_key=True)
   sociedad_id = Column(Integer, ForeignKey('sociedades.ficha'), primary_key=True)
   rol = Column(String, primary_key=True)
   sociedad = relationship(Sociedad)
@@ -79,7 +79,8 @@ class Asociacion(Base):
 class Persona(Base):
   __tablename__ = 'personas'
 
-  nombre = Column(Unicode, primary_key=True)
+  id = Column(Integer, Sequence('persona_id_seq'), primary_key=True)
+  nombre = Column(Unicode, unique=True)
   sociedades = relationship(Asociacion)
 
   def __init__(self,nombre):

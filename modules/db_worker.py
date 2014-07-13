@@ -33,6 +33,7 @@ def resolve_sociedad(sociedad,personas,asociaciones):
             break
         except Exception as e:
             logger.error(e)
+            sleep(5)
             session.rollback()
             session.expunge_all()
             continue
@@ -48,6 +49,15 @@ def find_or_create_sociedad(sociedad,session):
         session.add(sociedad)
         session.commit()
         return sociedad
+
+def find_or_create_persona(persona,session):
+    instance = session.query(Classes.Persona).filter(Classes.Persona.nombre == persona.nombre).first()
+    if instance:
+       return instance
+    else:
+        session.add(persona)
+        session.commit()
+        return persona
 
 
 def find_or_create_sociedades(sociedades,session):
@@ -84,19 +94,15 @@ def get_personas():
 
 def find_or_create_personas(personas,session):
     if len(personas) > 0:
-        nombres = [persona.nombre for persona in personas]
-        query = session.query(Classes.Persona).filter(Classes.Persona.nombre.in_(nombres))
-        result = list(query.merge_result(personas))
-        session.commit()
+        result = [find_or_create_persona(p,session) for p in personas]
         return set(result)
     else:
         return set()
 
 def find_or_create_asociaciones(personas,sociedad,rol,session):
     if len(personas) > 0:
-        persona_ids = [persona.nombre for persona in personas]
         query = session.query(Classes.Asociacion).filter(Classes.Asociacion.sociedad_id==sociedad.ficha)
-        asociaciones = [Classes.Asociacion(persona.nombre,sociedad.ficha,str(rol.upper())) for persona in personas]
+        asociaciones = [Classes.Asociacion(persona.id,sociedad.ficha,str(rol.upper())) for persona in personas]
         result = list(query.merge_result(asociaciones))
         session.commit()
         return result
