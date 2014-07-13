@@ -10,7 +10,7 @@ class Query(Thread):
 
   def run(self):
     response = self.pool.request('GET', self.url)
-    self.html_queue.put(response.data)
+    self.html_queue.put(response.data.decode('ISO-8859-1','ignore'))
     return
 
 class SociedadQuery(Thread):
