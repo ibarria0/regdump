@@ -38,7 +38,6 @@ def spawn_html_processing_thread(html_queue):
 def ficha_generator(old_fichas):
     for i in range(499977,5000,-1):
         if i not in old_fichas:
-            print(i)
             yield i
         else:
             continue
@@ -90,7 +89,6 @@ def query(query):
     return brute_sociedades(iter(fichas),False)
 
 def spawn_queries(query,n,start_page,html_queue):
-  print(n)
   queries = [Query(query_url(i,query),html_queue,pool) for i in range(start_page,start_page+(15*n),15)]
   for query in queries:
     query.setDaemon(True)
