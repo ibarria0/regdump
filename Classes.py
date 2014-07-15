@@ -27,6 +27,7 @@ class Sociedad(Base):
   provincia = deferred(Column(Unicode))
   visited = Column(Boolean)
   personas = relationship("Asociacion")
+  html = deferred(Column(UnicodeText))
 
   def __init__(self,nombre,ficha):
     self.nombre = str(nombre)
