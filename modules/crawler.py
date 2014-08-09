@@ -25,24 +25,29 @@ def query_url(page,query):
 def ficha_url(ficha):
     return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(ficha))
 
-def ficha_generator(old_fichas):
-    for i in range(600000,999999):
+def ficha_generator(fichas,old_fichas):
+    for i in fichas:
         if i not in old_fichas:
-            yield i
+            yield ficha_url(i)
         else:
             continue
 
 def brute_sociedades(fichas=False,skip_old=True):
-    if skip_old:
+    queue=[]
+    if skip_old and fichas:
         old_fichas = db_worker.get_fichas()
-        fichas = ficha_generator(old_fichas)
+        fichas = fichas.difference(old_fichas)
+        if len(fichas) == 0:
+           return queue
+        else:
+           fichas = (ficha_url(i) for i in fichas)
     elif not fichas:
         fichas = range(0,10000000)
+        fichas = ficha_generator(fichas,old_fichas)
     loop = asyncio.get_event_loop()
-    queue=[]
     f = asyncio.wait([get_html(url,queue,parse_sociedad_html) for url in fichas])
     loop.run_until_complete(f)
-    return True
+    return queue
 
 
 def generate_urls(url):
@@ -71,23 +76,23 @@ def query_registro_publico(query):
   urls = generate_urls(query)
   loop = asyncio.get_event_loop()
   results = set()
-  logger.info('initializing queries with %i threads', THREADS)
   while True:
     queue = []
     f = asyncio.wait([get_html(url,queue,parse_query_result) for url in next(urls)])
     loop.run_until_complete(f)
     results.update(queue)
     if results == old:
-        return list(filter(None,results))
+        return set(filter(None,results))
     else:
         old = results
 
 def query(query):
     fichas = query_registro_publico(query)
-    return brute_sociedades((ficha_url(f) for f in fichas),False)
+    print(fichas)
+    return brute_sociedades(fichas,True)
 
 def parse_query_result(html):
-    soup = BeautifulSoup(html,"lxml", parse_only=SoupStrainer('table'),from_encoding='latin-1')
+    soup = BeautifulSoup(html,"lxml", parse_only=SoupStrainer('table'))
     sociedades = soup.find('th',text='NOMBRE SOCIEDAD').parent.next_siblings
     fichas = [int(row.find('a').string) for row in sociedades if row.td.string is not None]
     return fichas
