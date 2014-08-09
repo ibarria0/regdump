@@ -19,9 +19,7 @@ logger = logging.getLogger('regdump')
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Query registro-publico.gob.pa for sociedades.')
     parser.add_argument('--query', dest='query', type=str)
-    parser.add_argument('--threads', dest='threads', type=int, default=15)
     args = parser.parse_args()
-    crawler.setThreads(args.threads) #set threads
 
     logger.info('regdump started')
 
