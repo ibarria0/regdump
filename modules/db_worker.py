@@ -22,21 +22,16 @@ def resolve_asociaciones(personas,asociaciones,session):
 
 def resolve_sociedad(sociedad,personas,asociaciones):
     session = session_maker()
-    while True:
-        try:
-            sociedad = find_or_create_sociedad(sociedad,session)
-            personas = find_or_create_personas(personas,session)
-            asociaciones = resolve_asociaciones(personas,asociaciones,session)
-            for rol in asociaciones.keys():
-                find_or_create_asociaciones(asociaciones[rol],sociedad,rol,session) #create associations
-            logger.info('sociedad %s resolved', sociedad.nombre)
-            break
-        except Exception as e:
-            logger.error(e)
-            sleep(5)
-            session.rollback()
-            session.expunge_all()
-            continue
+    try:
+        sociedad = find_or_create_sociedad(sociedad,session)
+        personas = find_or_create_personas(personas,session)
+        asociaciones = resolve_asociaciones(personas,asociaciones,session)
+        for rol in asociaciones.keys():
+            find_or_create_asociaciones(asociaciones[rol],sociedad,rol,session) #create associations
+        logger.info('sociedad %s resolved', sociedad.nombre)
+    except Exception as e:
+        logger.error(e)
+        session.rollback()
     session.expunge_all()
     session.close()
     return sociedad
