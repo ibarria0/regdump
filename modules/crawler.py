@@ -3,6 +3,8 @@ from Classes import Sociedad,Persona,Asociacion
 from queue import Empty
 import logging
 import Classes
+from Classes import *
+
 from modules import parser,db_worker
 from bs4 import BeautifulSoup,SoupStrainer
 from queue import Queue
@@ -34,16 +36,17 @@ def ficha_generator(fichas,old_fichas):
 
 def brute_sociedades(fichas=False,skip_old=True):
     queue=[]
+    old_fichas = db_worker.get_fichas()
     if skip_old and fichas:
-        old_fichas = db_worker.get_fichas()
         fichas = fichas.difference(old_fichas)
         if len(fichas) == 0:
            return queue
         else:
            fichas = (ficha_url(i) for i in fichas)
     elif not fichas:
-        fichas = range(0,10000000)
+        fichas = range(800000,1000000)
         fichas = ficha_generator(fichas,old_fichas)
+    lock = asyncio.Lock()
     loop = asyncio.get_event_loop()
     f = asyncio.wait([get_html(url,queue,parse_sociedad_html) for url in fichas])
     loop.run_until_complete(f)
@@ -68,8 +71,9 @@ def get_html(url,queue,parser):
     conn = aiohttp.ProxyConnector(proxy="http://localhost:8118")
     with (yield from sem):
         body = yield from get(url, headers=headers)
-    sleep(3)
-    [queue.append(i) for i in parser(body)]
+        sleep(3)
+    with (yield from lock):
+        [queue.append(i) for i in parser(body)]
 
 def query_registro_publico(query):
   old = set()
@@ -78,6 +82,7 @@ def query_registro_publico(query):
   results = set()
   while True:
     queue = []
+    lock = asyncio.Lock()
     f = asyncio.wait([get_html(url,queue,parse_query_result) for url in next(urls)])
     loop.run_until_complete(f)
     results.update(queue)
@@ -88,7 +93,6 @@ def query_registro_publico(query):
 
 def query(query):
     fichas = query_registro_publico(query)
-    print(fichas)
     return brute_sociedades(fichas,True)
 
 def parse_query_result(html):
