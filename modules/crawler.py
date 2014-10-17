@@ -17,9 +17,13 @@ from urllib3 import HTTPConnectionPool,ProxyManager
 import asyncio
 from urllib3 import make_headers
 import aiohttp
+from random import sample
 
 logger = logging.getLogger('crawler')
-sem = asyncio.Semaphore(1)
+sem = asyncio.Semaphore(3)
+
+with open('proxies.txt', 'r') as f:
+    proxies = f.read().splitlines()
 
 def query_url(page,query):
     return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
@@ -44,7 +48,7 @@ def brute_sociedades(fichas=False,skip_old=True):
         else:
            fichas = (ficha_url(i) for i in fichas)
     elif not fichas:
-        fichas = range(800000,1000000)
+        fichas = range(620000,800000)
         fichas = ficha_generator(fichas,old_fichas)
     lock = asyncio.Lock()
     loop = asyncio.get_event_loop()
@@ -62,15 +66,17 @@ def generate_urls(url):
 @asyncio.coroutine
 def get(*args, **kwargs):
     response = yield from aiohttp.request('GET', *args, **kwargs)
+    print(response)
     return (yield from response.read())
 
 
 @asyncio.coroutine
 def get_html(url,queue,parser):
     headers=make_headers(user_agent="Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36")
-    conn = aiohttp.ProxyConnector(proxy="http://localhost:8118")
+    conn = aiohttp.ProxyConnector(proxy=sample(proxies,1)[0])
     with (yield from sem):
-        body = yield from get(url, headers=headers)
+        body = yield from get(url, headers=headers, connector=conn)
+        print(body)
         sleep(3)
     with (yield from lock):
         [queue.append(i) for i in parser(body)]
@@ -103,6 +109,7 @@ def parse_query_result(html):
 
 def parse_sociedad_html(html):
     html = html.decode('ISO-8859-1','ignore')
+    print(html)
     if parser.exists(html):
         soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
         sociedad = scrape_sociedad_data(soup)
