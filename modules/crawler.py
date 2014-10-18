@@ -20,7 +20,9 @@ import aiohttp
 from random import sample
 
 logger = logging.getLogger('crawler')
-sem = asyncio.Semaphore(3)
+sem = asyncio.Semaphore(1)
+lock = asyncio.Lock()
+user_agents = ['Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0', 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36' , 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)' , 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25','Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2']
 
 with open('proxies.txt', 'r') as f:
     proxies = f.read().splitlines()
@@ -41,7 +43,7 @@ def ficha_generator(fichas,old_fichas):
 def brute_sociedades(fichas=False,skip_old=True):
     queue=[]
     old_fichas = db_worker.get_fichas()
-    if skip_old and fichas:
+    if skip_old and isinstance(fichas,set):
         fichas = fichas.difference(old_fichas)
         if len(fichas) == 0:
            return queue
@@ -69,14 +71,12 @@ def get(*args, **kwargs):
     print(response)
     return (yield from response.read())
 
-
 @asyncio.coroutine
 def get_html(url,queue,parser):
-    headers=make_headers(user_agent="Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36")
-    conn = aiohttp.ProxyConnector(proxy=sample(proxies,1)[0])
+    headers=make_headers(user_agent=sample(user_agents,1)[0])
+    #conn = aiohttp.ProxyConnector(proxy='http://localhost:8118')
     with (yield from sem):
-        body = yield from get(url, headers=headers, connector=conn)
-        print(body)
+        body = yield from get(url, headers=headers) #, connector=conn)
         sleep(3)
     with (yield from lock):
         [queue.append(i) for i in parser(body)]
@@ -88,7 +88,6 @@ def query_registro_publico(query):
   results = set()
   while True:
     queue = []
-    lock = asyncio.Lock()
     f = asyncio.wait([get_html(url,queue,parse_query_result) for url in next(urls)])
     loop.run_until_complete(f)
     results.update(queue)
@@ -109,11 +108,10 @@ def parse_query_result(html):
 
 def parse_sociedad_html(html):
     html = html.decode('ISO-8859-1','ignore')
-    print(html)
     if parser.exists(html):
         soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
         sociedad = scrape_sociedad_data(soup)
-        logger.debug('found sociedad %s', sociedad.nombre)
+        logger.info('found sociedad %s', sociedad.nombre)
         personas,asociaciones = scrape_personas(soup)
         logger.debug('found %i personas', len(personas))
         logger.debug('found %i asociaciones', len(asociaciones))
