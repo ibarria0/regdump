@@ -28,6 +28,8 @@ class Sociedad(Base):
   visited = Column(Boolean)
   personas = relationship("Asociacion")
   html = deferred(Column(UnicodeText))
+  created_at = Column(DateTime, default=datetime.now)
+  updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
 
   def __init__(self,nombre,ficha):
     self.nombre = str(nombre)
@@ -83,6 +85,9 @@ class Persona(Base):
   id = Column(Integer, Sequence('persona_id_seq'), primary_key=True)
   nombre = Column(Unicode, unique=True)
   sociedades = relationship(Asociacion)
+  created_at = Column(DateTime, default=datetime.now)
+  updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
 
   def __init__(self,nombre):
     self.nombre = nombre
