@@ -23,6 +23,7 @@ logger = logging.getLogger('crawler')
 sem = asyncio.Semaphore(1)
 lock = asyncio.Lock()
 user_agents = ['Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0', 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36' , 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)' , 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25','Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2']
+old_fichas = db_worker.get_fichas()
 
 with open('proxies.txt', 'r') as f:
     proxies = f.read().splitlines()
@@ -42,22 +43,17 @@ def ficha_generator(fichas,old_fichas):
 
 def brute_sociedades(fichas=False,skip_old=True):
     queue=[]
-    old_fichas = db_worker.get_fichas()
     if skip_old and isinstance(fichas,set):
         fichas = fichas.difference(old_fichas)
         if len(fichas) == 0:
            return queue
-        else:
-           fichas = (ficha_url(i) for i in fichas)
     elif not fichas:
-        fichas = range(620000,800000)
-        fichas = ficha_generator(fichas,old_fichas)
+        fichas = range(500000,1000000,5)
     lock = asyncio.Lock()
     loop = asyncio.get_event_loop()
-    f = asyncio.wait([get_html(url,queue,parse_sociedad_html) for url in fichas])
+    f = asyncio.wait([get_html(fc,queue,parse_sociedad_html) for fc in fichas])
     loop.run_until_complete(f)
     return queue
-
 
 def generate_urls(url):
     page = 0
@@ -76,8 +72,11 @@ def get_html(url,queue,parser):
     headers=make_headers(user_agent=sample(user_agents,1)[0])
     #conn = aiohttp.ProxyConnector(proxy='http://localhost:8118')
     with (yield from sem):
-        body = yield from get(url, headers=headers) #, connector=conn)
-        sleep(3)
+        if parser == parse_sociedad_html and url not in old_fichas:
+            body = yield from get(ficha_url(url), headers=headers) #, connector=conn)
+        elif parser == parse_query_result:
+            body = yield from get(url, headers=headers) #, connector=conn)
+            sleep(3)
     with (yield from lock):
         [queue.append(i) for i in parser(body)]
 
