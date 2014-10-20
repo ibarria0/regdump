@@ -76,7 +76,7 @@ def get_html(url,queue,parser):
             body = yield from get(ficha_url(url), headers=headers) #, connector=conn)
         elif parser == parse_query_result:
             body = yield from get(url, headers=headers) #, connector=conn)
-            sleep(3)
+        sleep(4)
     with (yield from lock):
         [queue.append(i) for i in parser(body)]
 
