@@ -19,7 +19,7 @@ class TestFundacionParser(unittest.TestCase):
         self.soup = soup
 
     def test_agente(self):
-        self.assertEqual(parser.collect_agente(self.soup),"BUFETE MF & CO.")
+        self.assertEqual(parser.collect_agente(self.soup),"VARELA CARDENAL Y ASOCIADOS")
 
     def test_exists(self):
         self.assertFalse(parser.exists(html_false))
