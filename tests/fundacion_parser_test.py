@@ -70,6 +70,10 @@ class TestFundacionParser(unittest.TestCase):
     def test_notaria(self):
         self.assertEqual(parser.collect_notaria(self.soup),"NOTARIA OCTAVA DEL CIRCUITO")
 
+    def test_num_documento(self):
+        self.assertEqual(parser.collect_num_documento(self.soup), 2372428)
+
+
     def test_provincia(self):
         self.assertEqual(parser.collect_provincia(self.soup),"PANAMA")
 

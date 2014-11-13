@@ -98,3 +98,6 @@ def collect_agente(soup):
 def collect_fundadores(soup):
   return [sanitize(row.td.string) for row in soup.find('td', width="100%",text='Nombre de los Fundadores').parent.parent.find_next_sibling('table').find_all('tr') if row.td.string != None]
 
+def collect_num_documento(soup):
+  return int(soup.find(text='No. Documento:').parent.parent.parent.find_next_sibling().p.string)
+
