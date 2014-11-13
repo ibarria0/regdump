@@ -77,7 +77,7 @@ def collect_notaria(soup):
   return sanitize(soup.find('td',text='Notaria:').find_next_sibling('td').find_next_sibling('td').string)
 
 def collect_fecha_registro(soup):
-  fecha = soup.find('td',text='Fecha de Registro:').find_next_sibling('td').string
+  fecha = soup.find('font',text='Fecha de Registro:').parent.parent.find_next_sibling('td').string
   try:
     return datetime.strptime(fecha, "%d-%m-%Y" ).date()
   except:
