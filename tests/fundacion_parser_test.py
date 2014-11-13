@@ -15,9 +15,6 @@ soup_false = BeautifulSoup(html_false,'html.parser',parse_only=SoupStrainer('p')
 
 class TestFundacionParser(unittest.TestCase):
     # Partes no incluidas en el test:
-    # No. de Ficha
-    # No. de Documento
-    # No. de Escritura
     # Fecha de Escritura
     # Datos 1a. Tasa Unica
     # Fecha de Pago
@@ -51,8 +48,14 @@ class TestFundacionParser(unittest.TestCase):
     def test_miembros(self):
         self.assertEqual(parser.collect_miembros(self.soup),['MICHAEL BORER BIERMANN', 'TERESITA DEL CARMEN MEDRANO', 'CAROLINA RAQUEL CONTE AMADO'])
 
+    def test_documento(self):
+        self.assertEqual(parser.collect_documento(self.soup), 2372428)
+
     def test_duracion(self):
         self.assertEqual(parser.collect_duracion(self.soup),"PERPETUA")
+
+    def test_escritura(self):
+        self.assertEqual(parser.collect_escritura(self.soup), 4218)
 
     def test_fecha_registro(self):
         self.assertEqual(parser.collect_fecha_registro(self.soup),datetime.strptime("23-04-2013", "%d-%m-%Y" ).date())
@@ -69,10 +72,6 @@ class TestFundacionParser(unittest.TestCase):
 
     def test_notaria(self):
         self.assertEqual(parser.collect_notaria(self.soup),"NOTARIA OCTAVA DEL CIRCUITO")
-
-    def test_num_documento(self):
-        self.assertEqual(parser.collect_num_documento(self.soup), 2372428)
-
 
     def test_provincia(self):
         self.assertEqual(parser.collect_provincia(self.soup),"PANAMA")
