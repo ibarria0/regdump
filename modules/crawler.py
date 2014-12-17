@@ -45,7 +45,7 @@ def brute_fundaciones(fichas=False,skip_old=False):
         if len(fichas) == 0:
            return queue
     elif not fichas:
-        fichas = range(2372427,2372429)
+        fichas = range(0,100000)
     for f in fichas:
         get_html(f,queue,parse_fundacion_html)
     lock = asyncio.Lock()
