@@ -111,7 +111,6 @@ def parse_query_result(html):
     return fichas
 
 def parse_fundacion_html(html):
-    html = html.decode('ISO-8859-1','ignore')
     if parser.exists(html):
         soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
         fundacion = scrape_fundacion_data(soup)
