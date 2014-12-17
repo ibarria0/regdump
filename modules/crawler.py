@@ -38,14 +38,9 @@ def ficha_generator(fichas,old_fichas):
         else:
             continue
 
-def brute_fundaciones(fichas,start,stop,step):
+def brute_fundaciones(start,stop,step):
     queue=[]
-    if skip_old and isinstance(fichas,set):
-        fichas = fichas.difference(old_fichas)
-        if len(fichas) == 0:
-           return queue
-    elif not fichas:
-        fichas = range(start,stop,step)
+    fichas = range(start,stop,step)
     lock = asyncio.Lock()
     loop = asyncio.get_event_loop()
     f = asyncio.wait([get_html(fc,queue,parse_fundacion_html) for fc in fichas])
