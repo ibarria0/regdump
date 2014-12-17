@@ -10,6 +10,74 @@ from bs4 import BeautifulSoup,SoupStrainer
 
 Base = declarative_base()
 
+class Fundacion(Base):
+  __tablename__ = 'fundaciones'
+
+  nombre= Column(Unicode, unique=True)
+  ficha = Column(Integer, primary_key=True)
+  documento = Column(Integer)
+  escritura = Column(Integer)
+  patrimonio = deferred(Column(Float))
+  moneda = deferred(Column(Unicode))
+  agente = deferred(Column(Unicode))
+  notaria = deferred(Column(Unicode))
+  fecha_registro = deferred(Column(Date))
+  patrimonio_text = deferred(Column(UnicodeText))
+  firmante_text = deferred(Column(UnicodeText))
+  status = deferred(Column(Unicode))
+  duracion = deferred(Column(Unicode))
+  provincia = deferred(Column(Unicode))
+  personas = relationship("FundacionPersonas")
+  html = deferred(Column(UnicodeText))
+  created_at = Column(DateTime, default=datetime.now)
+  updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
+
+  def __init__(self,nombre,ficha):
+    self.nombre = str(nombre)
+    self.ficha = ficha
+    self.html = None
+
+  def __getitem__(self,key):
+    return getattr(self, key)
+
+  def __hash__(self):
+    return hash(self.ficha)
+
+  def __str__(self):
+    return "Fundacion(%s)" % (self.nombre)
+
+  def __repr__(self):
+    return "Fundacion(%s)" % (self.ficha)
+
+  def __eq__(self,other):
+    return self.ficha == other.ficha
+
+class FundacionPersonas(Base):
+  __tablename__ = 'fundacion_personas'
+
+  persona_id = Column(Integer , ForeignKey('personas.id'), primary_key=True)
+  fundacion_id = Column(Integer, ForeignKey('fundaciones.ficha'), primary_key=True)
+  rol = Column(String, primary_key=True)
+  fundacion = relationship(Fundacion)
+  persona = relationship("Persona")
+
+  def __init__(self,persona_id,fundacion_id,rol):
+    self.persona_id = persona_id
+    self.fundacion_id = fundacion_id
+    self.rol = rol
+
+  def __getitem__(self,key):
+    return getattr(self, key)
+
+  def __str__(self):
+    return "FundacionPersonas(%s : %s)" % (self.persona,self.fundacion)
+
+  def __hash__(self):
+    return hash(self.fundacion_id, self.persona_id, self.rol)
+
+  def __eq__(self,other):
+    return (self.persona_id == other.persona_id and self.fundacion_id == other.persona_id and self.rol == other.rol)
+
 class Sociedad(Base):
   __tablename__ = 'sociedades'
 
