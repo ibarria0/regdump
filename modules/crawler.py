@@ -78,7 +78,7 @@ def get_html(url,queue,parser):
     headers=make_headers(user_agent=sample(user_agents,1)[0])
     #conn = aiohttp.ProxyConnector(proxy='http://localhost:8118')
     with (yield from sem):
-        if parser != parse_query_result and url not in old_fichas:
+        if parser != parse_query_result:
             body = yield from get(ficha_url(url), headers=headers) #, connector=conn)
         elif parser == parse_query_result:
             body = yield from get(url, headers=headers) #, connector=conn)
