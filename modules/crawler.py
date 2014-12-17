@@ -70,7 +70,6 @@ def generate_urls(url):
 @asyncio.coroutine
 def get(*args, **kwargs):
     response = yield from aiohttp.request('GET', *args, **kwargs)
-    print(response)
     return (yield from response.read())
 
 @asyncio.coroutine
@@ -116,7 +115,7 @@ def parse_fundacion_html(html):
     if parser.exists(html):
         soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
         fundacion = scrape_fundacion_data(soup)
-        logger.info('found fundacion %s', fundacion.nombre)
+        logger.debug('found fundacion %s', fundacion.nombre)
         personas,asociaciones = scrape_fundacion_personas(soup)
         logger.debug('found %i personas', len(personas))
         logger.debug('found %i asociaciones', len(asociaciones))
