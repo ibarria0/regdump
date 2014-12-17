@@ -37,9 +37,10 @@ class TestFundacionParser(unittest.TestCase):
     # modified test_capital to fit fundacion's patrimonio
     def test_patrimonio(self):
         self.assertEqual(parser.collect_patrimonio(self.soup), float(10000.0))
+
     def test_patrimonio_text(self):
         self.assertEqual(parser.collect_patrimonio_text(self.soup), "EL PATRIMONIO INICIAL DE LA FUNDACION ES DE 10,000 DOLARES AMERICANOS.")
-    
+
     # modified test_dignatarios to fit fundacion's cargos
     def test_cargos(self):
         self.assertEqual(parser.collect_cargos(self.soup),{'PRESIDENTE':['MICHAEL BORER BIERMANN'], 'TESORERO': ['CAROLINA RAQUEL CONTE AMADO'], 'SECRETARIO': ['TERESITA DEL CARMEN MEDRANO']})
@@ -68,7 +69,7 @@ class TestFundacionParser(unittest.TestCase):
         self.assertEqual(parser.collect_moneda(self.soup),"DOLARES AMERICANOS.")
 
     def test_nombre(self):
-        self.assertEqual(parser.collect_nombre(self.soup),"FUNDACION RAMECA")
+        self.assertEqual(parser.collect_nombre_fundacion(self.soup),"FUNDACION RAMECA")
 
     def test_notaria(self):
         self.assertEqual(parser.collect_notaria(self.soup),"NOTARIA OCTAVA DEL CIRCUITO")
