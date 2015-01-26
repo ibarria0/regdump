@@ -50,7 +50,7 @@ class TestParser(unittest.TestCase):
         self.assertEqual(parser.collect_moneda(self.soup),"DOLARES AMERICANOS.")
 
     def test_nombre(self):
-        self.assertEqual(parser.collect_nombre(self.soup),"BACON MANAGEMENT INC.")
+        self.assertEqual(parser.collect_nombre_sociedad(self.soup),"BACON MANAGEMENT INC.")
 
     def test_notaria(self):
         self.assertEqual(parser.collect_notaria(self.soup),"NOTARIA OCTAVA DEL CIRCUITO")

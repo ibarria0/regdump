@@ -1,5 +1,5 @@
 import requests
-from Classes import Sociedad,Persona,Asociacion
+from Classes import Sociedad,Persona,Asociacion,Fundacion,FundacionPersonas
 from queue import Empty
 import logging
 import Classes
@@ -25,14 +25,11 @@ lock = asyncio.Lock()
 user_agents = ['Mozilla/5.0 (Windows NT 5.1; rv:31.0) Gecko/20100101 Firefox/31.0', 'Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2049.0 Safari/537.36' , 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25', 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; WOW64; Trident/6.0)' , 'Mozilla/5.0 (compatible; MSIE 10.0; Windows NT 6.1; Trident/6.0)', 'Mozilla/5.0 (iPad; CPU OS 6_0 like Mac OS X) AppleWebKit/536.26 (KHTML, like Gecko) Version/6.0 Mobile/10A5355d Safari/8536.25','Mozilla/5.0 (Macintosh; Intel Mac OS X 10_6_8) AppleWebKit/537.13+ (KHTML, like Gecko) Version/5.1.7 Safari/534.57.2']
 old_fichas = db_worker.get_fichas()
 
-with open('proxies.txt', 'r') as f:
-    proxies = f.read().splitlines()
-
 def query_url(page,query):
     return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
 
 def ficha_url(ficha):
-    return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(ficha))
+    return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MEIPMENU?TODO=SHOW&ID=%s' % str(ficha))
 
 def ficha_generator(fichas,old_fichas):
     for i in fichas:
@@ -40,6 +37,15 @@ def ficha_generator(fichas,old_fichas):
             yield ficha_url(i)
         else:
             continue
+
+def brute_fundaciones(start,stop,step):
+    queue=[]
+    fichas = range(start,stop,step)
+    lock = asyncio.Lock()
+    loop = asyncio.get_event_loop()
+    f = asyncio.wait([get_html(fc,queue,parse_fundacion_html) for fc in fichas])
+    loop.run_until_complete(f)
+    return queue
 
 def brute_sociedades(fichas=False,skip_old=True):
     queue=[]
@@ -64,7 +70,6 @@ def generate_urls(url):
 @asyncio.coroutine
 def get(*args, **kwargs):
     response = yield from aiohttp.request('GET', *args, **kwargs)
-    print(response)
     return (yield from response.read())
 
 @asyncio.coroutine
@@ -72,7 +77,7 @@ def get_html(url,queue,parser):
     headers=make_headers(user_agent=sample(user_agents,1)[0])
     #conn = aiohttp.ProxyConnector(proxy='http://localhost:8118')
     with (yield from sem):
-        if parser == parse_sociedad_html and url not in old_fichas:
+        if parser != parse_query_result:
             body = yield from get(ficha_url(url), headers=headers) #, connector=conn)
         elif parser == parse_query_result:
             body = yield from get(url, headers=headers) #, connector=conn)
@@ -105,6 +110,17 @@ def parse_query_result(html):
     fichas = [int(row.find('a').string) for row in sociedades if row.td.string is not None]
     return fichas
 
+def parse_fundacion_html(html):
+    html = html.decode('ISO-8859-1','ignore')
+    if parser.exists(html):
+        soup = BeautifulSoup(html, 'html.parser', parse_only=SoupStrainer('p'))
+        fundacion = scrape_fundacion_data(soup)
+        logger.debug('found fundacion %s', fundacion.nombre)
+        personas,asociaciones = scrape_fundacion_personas(soup)
+        logger.debug('found %i personas', len(personas))
+        logger.debug('found %i asociaciones', len(asociaciones))
+        return db_worker.resolve_fundacion(fundacion,personas,asociaciones)
+
 def parse_sociedad_html(html):
     html = html.decode('ISO-8859-1','ignore')
     if parser.exists(html):
@@ -115,6 +131,38 @@ def parse_sociedad_html(html):
         logger.debug('found %i personas', len(personas))
         logger.debug('found %i asociaciones', len(asociaciones))
         return db_worker.resolve_sociedad(sociedad,personas,asociaciones)
+
+def scrape_fundacion_personas(soup):
+    miembros = scrape_fundacion_miembros(soup)
+    fundadores = scrape_fundacion_fundadores(soup)
+    cargos = scrape_fundacion_cargos(soup)
+    personas = set().union(*[miembros, unpack_personas_in_dignatarios(cargos), fundadores])
+    asociaciones = dict(list({'miembros':miembros, 'fundadores':fundadores}.items()) + list(cargos.items()))
+    return [personas,asociaciones]
+
+def scrape_fundacion_miembros(soup):
+    try:
+        miembros = {Persona(persona) for persona in parser.collect_miembros(soup)}
+    except Exception as e:
+        print(e)
+        return set()
+    return miembros
+
+def scrape_fundacion_fundadores(soup):
+    try:
+        fundadores = {Persona(persona) for persona in parser.collect_fundadores(soup)}
+    except Exception as e:
+        print(e)
+        return {}
+    return fundadores
+
+def scrape_fundacion_cargos(soup):
+  try:
+      cargos = { item[0]: {Persona(value) for value in item[1]} for item in parser.collect_cargos(soup).items()}
+  except Exception as e:
+    print(e)
+    return {}
+  return cargos
 
 def scrape_personas(soup):
     directores = scrape_sociedad_directores(soup)
@@ -164,4 +212,20 @@ def scrape_sociedad_data(soup):
     sociedad.capital_text = parser.collect_capital_text(soup)
     sociedad.representante_text = parser.collect_representante_text(soup)
     return sociedad
+
+def scrape_fundacion_data(soup):
+    fundacion = Fundacion(parser.collect_nombre_fundacion(soup),parser.collect_ficha(soup))
+    fundacion.escritura = parser.collect_escritura(soup)
+    fundacion.documento = parser.collect_documento(soup)
+    fundacion.fecha_registro = parser.collect_fecha_registro(soup)
+    fundacion.provincia = parser.collect_provincia(soup)
+    fundacion.notaria = parser.collect_notaria(soup)
+    fundacion.duracion = parser.collect_duracion(soup)
+    fundacion.status = parser.collect_status(soup)
+    fundacion.agente = parser.collect_agente(soup)
+    fundacion.moneda = parser.collect_moneda(soup)
+    fundacion.patrimonio = parser.collect_patrimonio(soup)
+    fundacion.patrimonio_text = parser.collect_patrimonio_text(soup)
+    fundacion.firmante_text = parser.collect_firmante_text(soup)
+    return fundacion
 
