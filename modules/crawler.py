@@ -29,7 +29,7 @@ def query_url(page,query):
     return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=MER4&START=%s&FROM=%s' % (str(page),query))
 
 def ficha_url(ficha):
-    return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MEIPMENU?TODO=SHOW&ID=%s' % str(ficha))
+    return ('http://201.224.39.199/scripts/nwwisapi.dll/conweb/MESAMENU?TODO=SHOW&ID=%s' % str(ficha))
 
 def ficha_generator(fichas,old_fichas):
     for i in fichas:
@@ -47,17 +47,12 @@ def brute_fundaciones(start,stop,step):
     loop.run_until_complete(f)
     return queue
 
-def brute_sociedades(fichas=False,skip_old=True):
+def brute_sociedades(start,stop,step):
+    fichas = range(start,stop,step)
     queue=[]
-    if skip_old and isinstance(fichas,set):
-        fichas = fichas.difference(old_fichas)
-        if len(fichas) == 0:
-           return queue
-    elif not fichas:
-        fichas = range(500000,1000000,5)
     lock = asyncio.Lock()
     loop = asyncio.get_event_loop()
-    f = asyncio.wait([get_html(fc,queue,parse_sociedad_html) for fc in fichas])
+    f = asyncio.wait([get_html(fc,queue,parse_sociedad_html) for fc in fichas if fc not in old_fichas])
     loop.run_until_complete(f)
     return queue
 
@@ -200,7 +195,7 @@ def unpack_personas_in_dignatarios(dignatarios):
     return {val for sublist in dignatarios.values() for val in sublist}
 
 def scrape_sociedad_data(soup):
-    sociedad = Sociedad(parser.collect_nombre(soup),parser.collect_ficha(soup))
+    sociedad = Sociedad(parser.collect_nombre_sociedad(soup),parser.collect_ficha(soup))
     sociedad.fecha_registro = parser.collect_fecha_registro(soup)
     sociedad.provincia = parser.collect_provincia(soup)
     sociedad.notaria = parser.collect_notaria(soup)

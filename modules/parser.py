@@ -90,13 +90,13 @@ def collect_status(soup):
   return sanitize(soup.find('td',text='Status:').find_next_sibling('td').string)
 
 def collect_provincia(soup):
-  return sanitize(soup.find('td',text='Provincia Notaria: ').find_next_sibling('td').string)
+  return sanitize(soup.find('td',text='Provincia:').find_next_sibling('td').string)
 
 def collect_duracion(soup):
   return sanitize(soup.find('td',text='Domicilio:').find_previous_sibling('td').string)
 
 def collect_agente(soup):
-  return sanitize(soup.find('td',text='Agente Residente: ').find_next_sibling('td').string)
+  return sanitize(soup.find('td',text='Agente Residente:').find_next_sibling('td').string)
 
 def collect_fundadores(soup):
   return [sanitize(row.td.string) for row in soup.find('td', width="100%",text='Nombre de los Fundadores').parent.parent.find_next_sibling('table').find_all('tr') if row.td.string != None]
