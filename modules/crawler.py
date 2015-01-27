@@ -65,7 +65,6 @@ def generate_urls(url):
 @asyncio.coroutine
 def get(*args, **kwargs):
     response = yield from aiohttp.request('GET', *args, **kwargs)
-    print(response)
     return (yield from response.read())
 
 @asyncio.coroutine
