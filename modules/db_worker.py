@@ -99,7 +99,7 @@ def find_max_ficha():
 def get_fichas():
     session = session_maker()
     try:
-        return list(zip(*session.query(Classes.Sociedad.ficha).all()))[0]
+        return set(list(zip(*session.query(Classes.Sociedad.ficha).all()))[0])
     except Exception as e:
         print(e)
         return set()
